@@ -236,6 +236,12 @@ int board_phy_config(struct phy_device *phydev)
 	return 0;
 }
 
+#ifdef CONFIG_LDO_BYPASS_CHECK
+void ldo_mode_set(int ldo_bypass)
+{
+}
+#endif
+
 int board_init(void)
 {
 	/* address of boot parameters */
