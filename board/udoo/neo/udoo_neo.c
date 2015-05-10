@@ -490,18 +490,22 @@ static struct lcd_panel_info_t const displays[] = {{
 	.depth = 24,
 	.enable	= do_enable_parallel_lcd,
 	.mode	= {
-        /* Attached to TDA19988, set default resolution to 720p */
+        /*
+         * Attached to TDA19988. For now set default resolution to
+         * 1024x768@60 this should work for both DVI and HDMI sources.
+         */
 		.name			= "MCIMX28LCD",
-        .refresh        = 60,
-		.xres           = 1280,
-		.yres           = 720,
-		.pixclock       = 13468,
-		.left_margin    = 220,
-		.right_margin   = 110,
-		.upper_margin   = 20,
-		.lower_margin   = 5,
-		.hsync_len      = 40,
-		.vsync_len      = 5,
+		.refresh        = 60,
+		.xres           = 1024,
+		.yres           = 768,
+		.pixclock       = 15385, // 65.000 Mhz
+		.left_margin    = 160,
+		.right_margin   = 24,
+		.upper_margin   = 29,
+		.lower_margin   = 3,
+		.hsync_len      = 136,
+		.vsync_len      = 6,
+		// TODO Set vsync high, temp workaround apply in dts file.
 		.sync           = 0,
 		.vmode          = FB_VMODE_NONINTERLACED
 } } };

@@ -219,7 +219,7 @@
 # define SEL_CLK_SEL_VRF_CLK(x)   (((x) & 3) << 1)
 # define SEL_CLK_ENA_SC_CLK       (1 << 3)
 #define REG_ANA_GENERAL           REG(0x02, 0x12)     /* read/write */
- 
+
 /* Page 09h: EDID Control */
 #define REG_EDID_DATA_0           REG(0x09, 0x00)     /* read */
 /* next 127 successive registers are the EDID block */
@@ -228,7 +228,7 @@
 #define REG_DDC_OFFS              REG(0x09, 0xfc)     /* read/write */
 #define REG_DDC_SEGM_ADDR         REG(0x09, 0xfd)     /* read/write */
 #define REG_DDC_SEGM              REG(0x09, 0xfe)     /* read/write */
- 
+
 /* Page 10h: information frames and packets */
 #define REG_IF1_HB0               REG(0x10, 0x20)     /* read/write */
 #define REG_IF2_HB0               REG(0x10, 0x40)     /* read/write */
@@ -270,7 +270,7 @@
 # define DIP_IF_FLAGS_IF4         (1 << 4)
 # define DIP_IF_FLAGS_IF5         (1 << 5)
 #define REG_CH_STAT_B(x)          REG(0x11, 0x14 + (x)) /* read/write */
- 
+
 /* Page 12h: HDCP and OTP */
 #define REG_TX3                   REG(0x12, 0x9a)     /* read/write */
 #define REG_TX4                   REG(0x12, 0x9b)     /* read/write */
@@ -375,6 +375,18 @@ void tda19988_reset(void) {
  
     /* Write the default value MUX register */
     hdmi_reg_write(REG_MUX_VP_VIP_OUT, 0x24);
+
+    /* Enable video ports */
+    hdmi_reg_write(REG_ENA_VP_0, 0xff);
+    hdmi_reg_write(REG_ENA_VP_1, 0xff);
+    hdmi_reg_write(REG_ENA_VP_2, 0xff);
+
+    /* Setup RGB Muxing for MCIMX28LCD */
+    hdmi_reg_write(REG_VIP_CNTRL_0,0x20);
+    hdmi_reg_write(REG_VIP_CNTRL_1,0x01);
+    hdmi_reg_write(REG_VIP_CNTRL_2,0x45);
+    hdmi_reg_write(REG_VIP_CNTRL_3,0x23);
+
 }
 
 /** 
@@ -386,10 +398,10 @@ void tda19988_fb_mode(struct fb_videomode mode) {
     uint hdisplay, hsync_start, hsync_end, htotal;
     uint vdisplay, vsync_start, vsync_end, vtotal;
 
-     hdmi_reg_write(REG_DDC_DISABLE, 0x00);
+    hdmi_reg_write(REG_DDC_DISABLE, 0x00);
      /* set clock on DDC channel: */
     hdmi_reg_write(REG_TX3, 39);
-            
+
     hdisplay = mode.xres;
     hsync_start = hdisplay + mode.right_margin;
     hsync_end = hsync_start + mode.hsync_len;
@@ -398,20 +410,18 @@ void tda19988_fb_mode(struct fb_videomode mode) {
     vsync_start = vdisplay + mode.lower_margin;
     vsync_end = vsync_start + mode.vsync_len;
     vtotal = vsync_end + mode.upper_margin;
-          
+
     uint n_pix        = htotal;
     uint n_line       = vtotal;
- 
+
     uint hs_pix_s     = hsync_start - hdisplay;
     uint hs_pix_e     = hsync_end - hdisplay;
     uint de_pix_s     = htotal - hdisplay;
     uint de_pix_e     = htotal;
 
-    /* Temp fix - shift by 5 pixels from testing on the NEO */
-    uint ref_pix      = 5 + hs_pix_s;
+    uint ref_pix      = 3 + hs_pix_s;
 
-    /* Temp fix - shift by 5 pixels from testing on the NEO */
-    uint ref_line     = 5 + vsync_start - vdisplay;
+    uint ref_line     = vsync_start - vdisplay;
     uint vwin1_line_s = vtotal - vdisplay - 1;
     uint vwin1_line_e = vwin1_line_s + vdisplay;
     uint vs1_pix_s    = hs_pix_s;
@@ -425,38 +435,56 @@ void tda19988_fb_mode(struct fb_videomode mode) {
     uint vs2_line_s   = 0;
     uint vs2_line_e   = 0; 
 
+    /* mute the audio FIFO: */
+    hdmi_reg_set(REG_AIP_CNTRL_0, AIP_CNTRL_0_RST_FIFO);
+
+    /* set HDMI HDCP mode off: */
+    hdmi_reg_write(REG_TBG_CNTRL_1, TBG_CNTRL_1_DWIN_DIS);
+    hdmi_reg_clear(REG_TX33, TX33_HDMI);
+    hdmi_reg_write(REG_ENC_CNTRL, ENC_CNTRL_CTL_CODE(0));
+
     uint div = 0;
-             
+    uint clk = (PICOS2KHZ(mode.pixclock)/10)*10;
+    div = 148500 / clk;
+    if (div != 0) {
+        div--;
+        if (div > 3)
+            div = 3;
+    }
+
     hdmi_reg_write(REG_HVF_CNTRL_0, HVF_CNTRL_0_PREFIL(0) |
                    HVF_CNTRL_0_INTPOL(0));
     hdmi_reg_write(REG_VIP_CNTRL_5, VIP_CNTRL_5_SP_CNT(0));
     hdmi_reg_write(REG_VIP_CNTRL_4, VIP_CNTRL_4_BLANKIT(0) |
                    VIP_CNTRL_4_BLC(0));
- 
+
     hdmi_reg_clear(REG_PLL_SERIAL_1, PLL_SERIAL_1_SRL_MAN_IZ);
     hdmi_reg_clear(REG_PLL_SERIAL_3, PLL_SERIAL_3_SRL_CCIR |
                                              PLL_SERIAL_3_SRL_DE);
     hdmi_reg_write(REG_SERIALIZER, 0);
     hdmi_reg_write(REG_HVF_CNTRL_1, HVF_CNTRL_1_VQR(0));
- 
+
     /* TODO enable pixel repeat for pixel rates less than 25Msamp/s */
     uint rep = 0;
     hdmi_reg_write(REG_RPT_CNTRL, 0);
     hdmi_reg_write(REG_SEL_CLK, SEL_CLK_SEL_VRF_CLK(0) |
                    SEL_CLK_SEL_CLK1 | SEL_CLK_ENA_SC_CLK);
- 
+
     hdmi_reg_write(REG_PLL_SERIAL_2, PLL_SERIAL_2_SRL_NOSC(div) |
                    PLL_SERIAL_2_SRL_PR(rep));
- 
+
     /* set color matrix bypass flag: */
     hdmi_reg_write(REG_MAT_CONTRL, MAT_CONTRL_MAT_BP |
                                    MAT_CONTRL_MAT_SC(1));
- 
+
     /* set BIAS tmds value: */
     hdmi_reg_write(REG_ANA_GENERAL, 0x09);
 
-    hdmi_reg_write(REG_VIP_CNTRL_3, VIP_CNTRL_3_SYNC_HS | VIP_CNTRL_3_V_TGL);
-    
+    /* For MX28 LCD controller invert Hsync */
+    value = VIP_CNTRL_3_SYNC_HS;
+    value = value | VIP_CNTRL_3_H_TGL;
+    hdmi_reg_write(REG_VIP_CNTRL_3, value);
+
     hdmi_reg_write(REG_VIDFORMAT, 0x00);
     hdmi_reg_write16(REG_REFPIX_MSB, ref_pix);
     hdmi_reg_write16(REG_REFLINE_MSB, ref_line);
@@ -478,20 +506,13 @@ void tda19988_fb_mode(struct fb_videomode mode) {
     hdmi_reg_write16(REG_VWIN_END_2_MSB, vwin2_line_e);
     hdmi_reg_write16(REG_DE_START_MSB, de_pix_s);
     hdmi_reg_write16(REG_DE_STOP_MSB, de_pix_e);
-            
-    value =  TBG_CNTRL_1_DWIN_DIS | TBG_CNTRL_1_TGL_EN;
-    value = value | TBG_CNTRL_1_V_TGL;
-    hdmi_reg_write(REG_TBG_CNTRL_1, value);
-            
-    hdmi_reg_write(REG_ENA_VP_0, 0xff);
-    hdmi_reg_write(REG_ENA_VP_1, 0xff);
-    hdmi_reg_write(REG_ENA_VP_2, 0xff);
 
-    /* Setup RGB Muxing for MCIMX28LCD */
-    hdmi_reg_write(REG_VIP_CNTRL_0,0x20);
-    hdmi_reg_write(REG_VIP_CNTRL_1,0x01);
-    hdmi_reg_write(REG_VIP_CNTRL_2,0x45);
-    hdmi_reg_write(REG_VIP_CNTRL_3,0x23);
+    hdmi_reg_write(REG_ENABLE_SPACE, 0x01);
+
+    /* For MX28 LCD controller invert Hsync */
+    value =  TBG_CNTRL_1_DWIN_DIS | TBG_CNTRL_1_TGL_EN;
+    value = value | TBG_CNTRL_1_H_TGL;
+    hdmi_reg_write(REG_TBG_CNTRL_1, value);
 
     /* must be last register set: */
     hdmi_reg_write(REG_TBG_CNTRL_0, 0);
