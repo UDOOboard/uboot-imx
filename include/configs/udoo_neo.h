@@ -71,12 +71,12 @@
 #undef CONFIG_CMD_EXPORTENV
 #undef CONFIG_CMD_IMPORTENV
 
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_DHCP
-#define CONFIG_CMD_MII
-#define CONFIG_CMD_NET
-#define CONFIG_FEC_MXC
-#define CONFIG_MII
+#undef CONFIG_CMD_PING
+#undef CONFIG_CMD_DHCP
+#undef CONFIG_CMD_MII
+#undef CONFIG_CMD_NET
+#undef CONFIG_FEC_MXC
+#undef CONFIG_MII
 #define CONFIG_FEC_ENET_DEV 0
 
 #if (CONFIG_FEC_ENET_DEV == 0)
@@ -177,7 +177,7 @@
 	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=/imx6sx-udooneo.dtb\0" \
+	"fdt_file=/imx6sx-udoo-neo.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \

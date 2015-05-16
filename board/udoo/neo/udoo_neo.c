@@ -160,10 +160,6 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 	MX6SX_PAD_SD3_DATA3__USDHC3_DATA3 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
 
-static iomux_v3_cfg_t const peri_3v3_pads[] = {
-	MX6SX_PAD_QSPI1A_DATA0__GPIO4_IO_16 | MUX_PAD_CTRL(NO_PAD_CTRL),
-};
-
 static iomux_v3_cfg_t const wdog_b_pad = {
 	MX6SX_PAD_GPIO1_IO13__GPIO1_IO_13 | MUX_PAD_CTRL(WDOG_PAD_CTRL),
 };
@@ -229,6 +225,48 @@ static void setup_iomux_uart(void)
     imx_iomux_v3_setup_multiple_pads(uart2_pads, ARRAY_SIZE(uart1_pads));
 }
 
+static iomux_v3_cfg_t const gpio_pads[] = {
+
+    MX6SX_PAD_KEY_ROW3__GPIO2_IO_18 | MUX_PAD_CTRL(NO_PAD_CTRL),   // LED
+    MX6SX_PAD_SD1_CLK__GPIO6_IO_0   | MUX_PAD_CTRL(NO_PAD_CTRL),   // LED
+
+    MX6SX_PAD_KEY_COL3__GPIO2_IO_13 | MUX_PAD_CTRL(NO_PAD_CTRL),     // Gyro interrupt
+    MX6SX_PAD_NAND_WE_B__GPIO4_IO_14 | MUX_PAD_CTRL(NO_PAD_CTRL),    // Mag interrupt
+    MX6SX_PAD_QSPI1B_DATA2__GPIO4_IO_26 | MUX_PAD_CTRL(NO_PAD_CTRL), // Accel interrupt
+
+    MX6SX_PAD_SD1_DATA2__GPIO6_IO_4 | MUX_PAD_CTRL(NO_PAD_CTRL),  // Touch interrupt
+    MX6SX_PAD_SD1_DATA3__GPIO6_IO_5 | MUX_PAD_CTRL(NO_PAD_CTRL),  // Touch reset
+
+    // Multiplexer pins for GPIO/ADC (J5)
+    MX6SX_PAD_RGMII2_TXC__GPIO5_IO_23 | MUX_PAD_CTRL(NO_PAD_CTRL),    // MUX_A
+    MX6SX_PAD_RGMII2_RX_CTL__GPIO5_IO_16 | MUX_PAD_CTRL(NO_PAD_CTRL), // MUX_B
+    MX6SX_PAD_QSPI1A_SCLK__GPIO4_IO_21 | MUX_PAD_CTRL(NO_PAD_CTRL),   // MUX_C
+    MX6SX_PAD_QSPI1A_SS0_B__GPIO4_IO_22 | MUX_PAD_CTRL(NO_PAD_CTRL),  // MUX_D
+    MX6SX_PAD_QSPI1A_DATA2__GPIO4_IO_18 | MUX_PAD_CTRL(NO_PAD_CTRL),  // MUX_E
+    MX6SX_PAD_QSPI1A_DATA3__GPIO4_IO_19 | MUX_PAD_CTRL(NO_PAD_CTRL),  // MUX_F
+};
+
+static void setup_iomux_gpio(void)
+{
+    imx_iomux_v3_setup_multiple_pads(gpio_pads, ARRAY_SIZE(gpio_pads));
+
+    gpio_direction_input(IMX_GPIO_NR(2,13)); // Gyro interrupt
+    gpio_direction_input(IMX_GPIO_NR(4,14)); // Mag interrupt
+    gpio_direction_input(IMX_GPIO_NR(4,26)); // Accel interupt
+    gpio_direction_input(IMX_GPIO_NR(2,4));  // Touch interrupt
+
+    gpio_direction_output(IMX_GPIO_NR(2,18), 1); // LED
+    gpio_direction_output(IMX_GPIO_NR(6,0), 1);  // LED
+
+    gpio_direction_output(IMX_GPIO_NR(5,23), 0); // MUX_A
+    gpio_direction_output(IMX_GPIO_NR(5,16), 0); // MUX_B
+    gpio_direction_output(IMX_GPIO_NR(4,21), 0); // MUX_C
+    gpio_direction_output(IMX_GPIO_NR(4,22), 0); // MUX_D
+    gpio_direction_output(IMX_GPIO_NR(4,18), 0); // MUX_E
+    gpio_direction_output(IMX_GPIO_NR(4,19), 0); // MUX_F
+
+};
+
 #ifdef CONFIG_QSPI
 
 #define QSPI_PAD_CTRL1	\
@@ -242,14 +280,6 @@ static iomux_v3_cfg_t const quadspi_pads[] = {
 	MX6SX_PAD_NAND_CE1_B__QSPI2_A_DATA_3	| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
 	MX6SX_PAD_NAND_ALE__QSPI2_A_SS0_B		| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
 	MX6SX_PAD_NAND_CLE__QSPI2_A_SCLK		| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-	MX6SX_PAD_NAND_DATA07__QSPI2_A_DQS		| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-	MX6SX_PAD_NAND_DATA01__QSPI2_B_DATA_0	| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-	MX6SX_PAD_NAND_DATA00__QSPI2_B_DATA_1	| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-	MX6SX_PAD_NAND_WE_B__QSPI2_B_DATA_2		| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-	MX6SX_PAD_NAND_RE_B__QSPI2_B_DATA_3		| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-	MX6SX_PAD_NAND_DATA03__QSPI2_B_SS0_B	| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-	MX6SX_PAD_NAND_DATA02__QSPI2_B_SCLK		| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-	MX6SX_PAD_NAND_DATA05__QSPI2_B_DQS		| MUX_PAD_CTRL(QSPI_PAD_CTRL1),
 };
 
 int board_qspi_init(void)
@@ -427,7 +457,6 @@ static iomux_v3_cfg_t const lcd_pads[] = {
 	MX6SX_PAD_LCD1_DATA22__LCDIF1_DATA_22 | MUX_PAD_CTRL(LCD_PAD_CTRL),
 	MX6SX_PAD_LCD1_DATA23__LCDIF1_DATA_23 | MUX_PAD_CTRL(LCD_PAD_CTRL),
 	MX6SX_PAD_LCD1_RESET__GPIO3_IO_27 | MUX_PAD_CTRL(NO_PAD_CTRL),
-
 };
 
 
@@ -459,9 +488,9 @@ void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
 
 	imx_iomux_v3_setup_multiple_pads(lcd_pads, ARRAY_SIZE(lcd_pads));
 
-	/* HDMI interrupt */
-	gpio_direction_input(IMX_GPIO_NR(3, 27));
-    
+    /* HDMI interrupt */
+    gpio_direction_input(IMX_GPIO_NR(3, 27));
+
     /* Initialise HDMI controller */
     tda19988_init();
     tda19988_reset();
@@ -851,11 +880,7 @@ int board_init(void)
 	 */
 	imx_iomux_v3_setup_pad(wdog_b_pad);
 
-	/* Enable PERI_3V3, which is used by SD2, ENET, LVDS, BT */
-	imx_iomux_v3_setup_multiple_pads(peri_3v3_pads, ARRAY_SIZE(peri_3v3_pads));
-
-	/* Active high for ncp692 */
-	gpio_direction_output(IMX_GPIO_NR(4, 16) , 1);
+	setup_iomux_gpio();
 
 #ifdef CONFIG_SYS_I2C_MXC
 	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
