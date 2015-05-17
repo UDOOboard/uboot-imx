@@ -654,6 +654,7 @@ int board_phy_config(struct phy_device *phydev)
 #define PFUZE100_SW1CSTBY	0x2f
 #define PFUZE100_SW1CCONF	0x32
 #define PFUZE100_SW1ABC_SETP(x)	((x - 3000) / 250)
+#define PFUZE100_VGEN3CTL	0x6E
 #define PFUZE100_VGEN5CTL	0x70
 
 /* set all switches APS in normal and PFM mode in standby */
@@ -762,7 +763,18 @@ static int setup_pmic_voltages(void)
 			return -1;
 		}
 
-		/* Enable power of VGEN5 3V3, needed for SD3 */
+		/* Enable power of VGEN3 2V8 for PMIC-ON LED */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE100_VGEN3CTL, 1, &value, 1)) {
+			printf("Read VGEN3CTL error!\n");
+			return -1;
+		}
+		value |= 0x1A;
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE100_VGEN3CTL, 1, &value, 1)) {
+			printf("Set VGEN3CTL error!\n");
+			return -1;
+		}
+
+		/* Enable power of VGEN5 3V3  */
 		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE100_VGEN5CTL, 1, &value, 1)) {
 			printf("Read VGEN5CTL error!\n");
 			return -1;
