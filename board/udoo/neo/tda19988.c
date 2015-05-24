@@ -421,7 +421,7 @@ void tda19988_fb_mode(struct fb_videomode mode) {
 
     uint ref_pix      = 3 + hs_pix_s;
 
-    uint ref_line     = vsync_start - vdisplay;
+    uint ref_line     = 1 + vsync_start - vdisplay;
     uint vwin1_line_s = vtotal - vdisplay - 1;
     uint vwin1_line_e = vwin1_line_s + vdisplay;
     uint vs1_pix_s    = hs_pix_s;

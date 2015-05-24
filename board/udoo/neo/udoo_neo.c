@@ -37,6 +37,8 @@ extern void tda19988_reset(void);
 void tda19988_fb_mode(struct fb_videomode mode);
 #endif
 
+#include <asm/arch/crm_regs.h>
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define UART_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |		\
@@ -222,7 +224,6 @@ static void setup_iomux_fec(int fec_id)
 static void setup_iomux_uart(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
-    imx_iomux_v3_setup_multiple_pads(uart2_pads, ARRAY_SIZE(uart1_pads));
 }
 
 static iomux_v3_cfg_t const gpio_pads[] = {
@@ -457,6 +458,8 @@ static iomux_v3_cfg_t const lcd_pads[] = {
 	MX6SX_PAD_LCD1_DATA22__LCDIF1_DATA_22 | MUX_PAD_CTRL(LCD_PAD_CTRL),
 	MX6SX_PAD_LCD1_DATA23__LCDIF1_DATA_23 | MUX_PAD_CTRL(LCD_PAD_CTRL),
 	MX6SX_PAD_LCD1_RESET__GPIO3_IO_27 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	/* CEC Clock */
+	MX6SX_PAD_GPIO1_IO12__CCM_CLKO2 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 
@@ -491,6 +494,14 @@ void do_enable_parallel_lcd(struct lcd_panel_info_t const *dev)
     /* HDMI interrupt */
     gpio_direction_input(IMX_GPIO_NR(3, 27));
 
+    /* Set clock CCM_CLKO2 to 12MHz */
+    struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+    int reg;
+    reg = readl(&mxc_ccm->ccosr);
+    reg |= (MXC_CCM_CCOSR_CKO2_EN_OFFSET  |
+        1 << MXC_CCM_CCOSR_CKO2_DIV_OFFSET |
+        14 << MXC_CCM_CCOSR_CKO2_SEL_OFFSET );
+
     /* Initialise HDMI controller */
     tda19988_init();
     tda19988_reset();
@@ -521,21 +532,19 @@ static struct lcd_panel_info_t const displays[] = {{
 	.mode	= {
         /*
          * Attached to TDA19988. For now set default resolution to
-         * 1024x768@60 this should work for both DVI and HDMI sources.
+         * 1280x720@60 this should work for both DVI and HDMI sources.
          */
 		.name			= "MCIMX28LCD",
-		.refresh        = 60,
-		.xres           = 1024,
-		.yres           = 768,
-		.pixclock       = 15385, // 65.000 Mhz
-		.left_margin    = 160,
-		.right_margin   = 24,
-		.upper_margin   = 29,
-		.lower_margin   = 3,
-		.hsync_len      = 136,
-		.vsync_len      = 6,
-		// TODO Set vsync high, temp workaround apply in dts file.
-		.sync           = 0,
+		.xres           = 1280,
+		.yres           = 720,
+		.pixclock       = 13468, // 74.250 MHz
+		.left_margin    = 220,
+		.right_margin   = 110,
+		.upper_margin   = 20,
+		.lower_margin   = 5,
+		.hsync_len      = 40,
+		.vsync_len      = 5,
+		.sync           = FB_SYNC_VERT_HIGH_ACT,
 		.vmode          = FB_VMODE_NONINTERLACED
 } } };
 
@@ -897,7 +906,7 @@ int board_init(void)
 #ifdef CONFIG_SYS_I2C_MXC
 	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
 	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info2);
-	setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info3);    
+    setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info3);
 #endif
 
 #ifdef	CONFIG_FEC_MXC

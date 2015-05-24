@@ -111,10 +111,6 @@
 #define CONFIG_PMIC_I2C_SLAVE		0x8
 #endif
 
-/* VIDEO */
-#define CONFIG_VIDEO
-#define CONFIG_VIDEO_GIS
-
 /* Command definition */
 #include <config_cmd_default.h>
 
@@ -152,7 +148,7 @@
 
 #ifdef CONFIG_VIDEO
 #define CONFIG_VIDEO_MODE \
-	"panel=MCIMX28LCD\0"
+	"panel=" CONFIG_VIDEO_PANEL "\0"
 #else
 #define CONFIG_VIDEO_MODE ""
 #endif
@@ -177,7 +173,7 @@
 	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=/imx6sx-udoo-neo.dtb\0" \
+	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \

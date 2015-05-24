@@ -129,9 +129,17 @@ static void mxs_lcd_init(GraphicDevice *panel,
 	writel((mode->yres << LCDIF_TRANSFER_COUNT_V_COUNT_OFFSET) | mode->xres,
 		&regs->hw_lcdif_transfer_count);
 
+#ifdef CONFIG_UDOO_NEO_HDMI
+    uint sync = (mode->sync & FB_SYNC_VERT_HIGH_ACT) ? LCDIF_VDCTRL0_VSYNC_POL :0;
+    sync |= (mode->sync & FB_SYNC_HOR_HIGH_ACT) ? LCDIF_VDCTRL0_HSYNC_POL :0;
+#endif
+
 	writel(LCDIF_VDCTRL0_ENABLE_PRESENT | LCDIF_VDCTRL0_ENABLE_POL |
 		LCDIF_VDCTRL0_VSYNC_PERIOD_UNIT |
 		LCDIF_VDCTRL0_VSYNC_PULSE_WIDTH_UNIT |
+#ifdef CONFIG_UDOO_NEO_HDMI
+        sync |
+#endif
 		mode->vsync_len, &regs->hw_lcdif_vdctrl0);
 	writel(mode->upper_margin + mode->lower_margin +
 		mode->vsync_len + mode->yres,
