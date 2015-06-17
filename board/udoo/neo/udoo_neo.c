@@ -651,7 +651,8 @@ int board_phy_config(struct phy_device *phydev)
 }
 #endif
 
-#ifdef CONFIG_PFUZE100_PMIC_I2C
+#if defined(CONFIG_PFUZE100_PMIC_I2C) ||  defined(CONFIG_PFUZE300_PMIC_I2C)
+
 #define PFUZE100_DEVICEID	0x0
 #define PFUZE100_REVID		0x3
 #define PFUZE100_FABID		0x4
@@ -666,19 +667,57 @@ int board_phy_config(struct phy_device *phydev)
 #define PFUZE100_VGEN3CTL	0x6E
 #define PFUZE100_VGEN5CTL	0x70
 
+
+#define PFUZE300_DEVICEID	0x0
+#define PFUZE300_REVID		0x3
+#define PFUZE300_FABID		0x4
+
+#define PFUZE300_SW1AVOL        0x20
+#define PFUZE300_SW1ASTBY       0x21
+#define PFUZE300_SW1AOFF        0x22
+#define PFUZE300_SW1AMODE       0x23
+#define PFUZE300_SW1ACONF       0x24
+
+#define PFUZE300_SW1BVOL        0x2E
+#define PFUZE300_SW1BSTBY       0x2F
+#define PFUZE300_SW1BOFF        0x30
+#define PFUZE300_SW1BMODE       0x31
+#define PFUZE300_SW1BCONF       0x32
+
+#define PFUZE300_SW3VOL         0x3C
+#define PFUZE300_SW3STBY        0x3D
+#define PFUZE300_SW3OFF         0x3E
+#define PFUZE300_SW3MODE        0x3F
+#define PFUZE300_SW3CONF        0x40
+
+#define PFUZE300_VLDO2CTL       0x6D
+
+#define PFUZE300_SW1AB_SETP(x)	((x - 7000) / 250)
+#define PFUZE300_SW3_SETP(x)	((x - 9000) / 500)
+
+#define PFUZE300_VLDO_SETP(x)   ((x - 8000) / 500)
+
 /* set all switches APS in normal and PFM mode in standby */
 static int setup_pmic_mode(int chip)
 {
 	unsigned char offset, i, switch_num, value;
 
-	if (!chip) {
-		/* pfuze100 */
-		switch_num = 6;
-		offset = 0x31;
-	} else {
-		/* pfuze200 */
-		switch_num = 4;
-		offset = 0x38;
+
+	switch (chip) {
+		case 0x00:   	/* pfuze100 */
+			switch_num = 6;
+			offset = 0x31;
+			break;
+		case 0x01:		/* pfuze200 */
+			switch_num = 4;
+			offset = 0x38;
+			break;
+		case 0x30:		/* pfuze300 */  
+			switch_num = 4;
+			offset = 0x31;
+			break;
+		default:
+			printf ("Device ID error: %#X\n", chip);
 	}
 
 	value = 0xc;
@@ -705,6 +744,9 @@ static int setup_pmic_voltages(void)
 
 	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_PMIC_I2C_SLAVE);
 	if (!i2c_probe(CONFIG_PMIC_I2C_SLAVE)) {
+
+#if defined(CONFIG_PFUZE100_PMIC_I2C)
+
 		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE100_DEVICEID, 1, &value, 1)) {
 			printf("Read device ID error!\n");
 			return -1;
@@ -796,6 +838,128 @@ static int setup_pmic_voltages(void)
 		}
 	}
 
+#elif defined(CONFIG_PFUZE300_PMIC_I2C)
+
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_DEVICEID, 1, &value, 1)) {
+			printf("Read device ID error!\n");
+			return -1;
+		}
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_REVID, 1, &rev_id, 1)) {
+			printf("Read Rev ID error!\n");
+			return -1;
+		}
+
+		/*
+		 * PFUZE300: Die version 0x30 = PF0300
+		 */
+		printf("Found %s! deviceid 0x%x, revid 0x%x\n", 
+		       "PFUZE300", value, rev_id);
+
+		if (setup_pmic_mode(value)) {
+			printf("setup pmic mode error!\n");
+			return -1;
+		}
+		/* set SW1A standby volatage 0.975V */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1ASTBY, 1, &value, 1)) {
+			printf("Read SW1ASTBY error!\n");
+			return -1;
+		}
+		value &= ~0x3f;
+		value |= PFUZE300_SW1AB_SETP(9750);
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1ASTBY, 1, &value, 1)) {
+			printf("Set SW1ASTBY error!\n");
+			return -1;
+		}
+		/* set SW1B standby volatage 0.975V */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BSTBY, 1, &value, 1)) {
+			printf("Read SW1BSTBY error!\n");
+			return -1;
+		}
+		value &= ~0x3f;
+		value |= PFUZE300_SW1AB_SETP(9750);
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BSTBY, 1, &value, 1)) {
+			printf("Set SW1BSTBY error!\n");
+			return -1;
+		}
+
+		/* set SW1A/VDD_ARM_IN step ramp up time from 16us to 4us/25mV */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1ACONF, 1, &value, 1)) {
+			printf("Read SW1ACONFIG error!\n");
+			return -1;
+		}
+		value &= ~0xc0;
+		value |= 0x40;
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1ACONF, 1, &value, 1)) {
+			printf("Set SW1ACONFIG error!\n");
+			return -1;
+		}
+
+		/* set SW1B/VDD_SOC_IN step ramp up time from 16us to 4us/25mV */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BCONF, 1, &value, 1)) {
+			printf("Read SW1BCONFIG error!\n");
+			return -1;
+		}
+		value &= ~0xc0;
+		value |= 0x40;
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BCONF, 1, &value, 1)) {
+			printf("Set SW1BCONFIG error!\n");
+			return -1;
+		}
+
+
+		/* set VDD_ARM_IN to 1.350V */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1AVOL, 1, &value, 1)) {
+			printf("Read SW1A error!\n");
+			return -1;
+		}
+		value &= ~0x3f;
+		value |= PFUZE300_SW1AB_SETP(13500);
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1AVOL, 1, &value, 1)) {
+			printf("Set SW1A error!\n");
+			return -1;
+		}
+
+
+		/* set VDD_SOC_IN to 1.350V */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BVOL, 1, &value, 1)) {
+			printf("Read SW1B error!\n");
+			return -1;
+		}
+		value &= ~0x3f;
+		value |= PFUZE300_SW1AB_SETP(13500);
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BVOL, 1, &value, 1)) {
+			printf("Set SW1B error!\n");
+			return -1;
+		}
+
+		/* set DDR_1_5V to 1.350V */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW3VOL, 1, &value, 1)) {
+			printf("Read SW3 error!\n");
+			return -1;
+		}
+		value &= ~0x0f;
+		value |= PFUZE300_SW3_SETP(13500);
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW3VOL, 1, &value, 1)) {
+			printf("Set SW3 error!\n");
+			return -1;
+		}
+
+		/* set VGEN2_1V5 to 1.5V */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_VLDO2CTL, 1, &value, 1)) {
+			printf("Read VLDO2 error!\n");
+			return -1;
+		}
+		value &= ~0x0f;
+		value |= PFUZE300_VLDO_SETP(15000);
+		/*  enable  */
+		value |= 0x10;
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_VLDO2CTL, 1, &value, 1)) {
+			printf("Set VLDO2 error!\n");
+			return -1;
+		}
+	}
+
+#endif  /* defined(CONFIG_PFUZE300_PMIC_I2C)  */
 	return 0;
 }
 
@@ -805,6 +969,9 @@ void ldo_mode_set(int ldo_bypass)
 	unsigned char value;
 	int is_400M;
 	u32 vddarm;
+
+#if defined(CONFIG_PFUZ100_PMIC_I2C)
+
 	/* switch to ldo_bypass mode */
 	if (ldo_bypass) {
 		prep_anatop_bypass();
@@ -862,6 +1029,75 @@ void ldo_mode_set(int ldo_bypass)
 		finish_anatop_bypass();
 		printf("switch to ldo_bypass mode!\n");
 	}
+
+
+#elif defined(CONFIG_PFUZE300_PMIC_I2C)
+	printf ("sono entrato in %s\n", __func__);
+	/* switch to ldo_bypass mode */
+	if (ldo_bypass) {
+		prep_anatop_bypass();
+			printf ("setto i valori\n");
+		/* set VDD_ARM_IN to 1.350V */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1AVOL, 1, &value, 1)) {
+			printf("Read SW1A error!\n");
+			return;
+		}
+		value &= ~0x3f;
+		value |= PFUZE300_SW1AB_SETP(13500);
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1AVOL, 1, &value, 1)) {
+			printf("Set SW1A error!\n");
+			return;
+		}
+
+
+		/* set VDD_SOC_IN to 1.350V */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BVOL, 1, &value, 1)) {
+			printf("Read SW1B error!\n");
+			return;
+		}
+		value &= ~0x3f;
+		value |= PFUZE300_SW1AB_SETP(13500);
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BVOL, 1, &value, 1)) {
+			printf("Set SW1B error!\n");
+			return;
+		}
+
+
+		is_400M = set_anatop_bypass(1);
+		if (is_400M)
+			vddarm = PFUZE300_SW1AB_SETP(10750);
+		else
+			vddarm = PFUZE300_SW1AB_SETP(11750);
+
+		printf ("valore di vddarm %d\n", vddarm);
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1AVOL, 1, &value, 1)) {
+			printf("Read SW1A error!\n");
+			return;
+		}
+		value &= ~0x3f;
+		value |= vddarm;
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1AVOL, 1, &value, 1)) {
+			printf("Set SW1A error!\n");
+			return;
+		}
+
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BVOL, 1, &value, 1)) {
+			printf("Read SW1B error!\n");
+			return;
+		}
+		value &= ~0x3f;
+		value |= PFUZE300_SW1AB_SETP(11750);
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_SW1BVOL, 1, &value, 1)) {
+			printf("Set SW1B error!\n");
+			return;
+		}
+
+		finish_anatop_bypass();
+		printf("switch to ldo_bypass mode!\n");
+	}
+
+
+#endif   /* defined(CONFIG_PFUZE300_PMIC_I2C)  */
 
 }
 #endif
@@ -936,7 +1172,7 @@ int board_late_init(void)
 	add_board_boot_modes(board_boot_modes);
 #endif
 
-#ifdef CONFIG_PFUZE100_PMIC_I2C
+#if defined(CONFIG_PFUZE100_PMIC_I2C) || defined(CONFIG_PFUZE300_PMIC_I2C)
 	int ret = 0;
 
 	ret = setup_pmic_voltages();
