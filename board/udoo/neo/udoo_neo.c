@@ -228,7 +228,7 @@ static void setup_iomux_uart(void)
 
 static iomux_v3_cfg_t const gpio_pads[] = {
 
-    MX6SX_PAD_KEY_ROW3__GPIO2_IO_18 | MUX_PAD_CTRL(NO_PAD_CTRL),   // LED
+    MX6SX_PAD_NAND_DATA02__GPIO4_IO_6 | MUX_PAD_CTRL(NO_PAD_CTRL), // LED
     MX6SX_PAD_SD1_CLK__GPIO6_IO_0   | MUX_PAD_CTRL(NO_PAD_CTRL),   // LED
 
     MX6SX_PAD_KEY_COL3__GPIO2_IO_13 | MUX_PAD_CTRL(NO_PAD_CTRL),     // Gyro interrupt
@@ -256,7 +256,7 @@ static void setup_iomux_gpio(void)
     gpio_direction_input(IMX_GPIO_NR(4,26)); // Accel interupt
     gpio_direction_input(IMX_GPIO_NR(2,4));  // Touch interrupt
 
-    gpio_direction_output(IMX_GPIO_NR(2,18), 1); // LED
+    gpio_direction_output(IMX_GPIO_NR(4,6), 0);	 // LED
     gpio_direction_output(IMX_GPIO_NR(6,0), 1);  // LED
 
     gpio_direction_output(IMX_GPIO_NR(5,23), 0); // MUX_A
@@ -691,6 +691,7 @@ int board_phy_config(struct phy_device *phydev)
 #define PFUZE300_SW3CONF        0x40
 
 #define PFUZE300_VLDO2CTL       0x6D
+#define PFUZE3000_LDOGCTL	    0x69
 
 #define PFUZE300_SW1AB_SETP(x)	((x - 7000) / 250)
 #define PFUZE300_SW3_SETP(x)	((x - 9000) / 500)
@@ -955,6 +956,17 @@ static int setup_pmic_voltages(void)
 		value |= 0x10;
 		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE300_VLDO2CTL, 1, &value, 1)) {
 			printf("Set VLDO2 error!\n");
+			return -1;
+		}
+        
+        /* disable Low Power Mode during standby mode */
+		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE3000_LDOGCTL, 1, &value, 1)) {
+			printf("Read LDOCTL error!\n");
+			return -1;
+		}
+		value |= 0x1;
+		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE3000_LDOGCTL, 1, &value, 1)) {
+			printf("Set LDOCTL error!\n");
 			return -1;
 		}
 	}
