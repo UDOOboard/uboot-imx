@@ -691,8 +691,6 @@ int board_phy_config(struct phy_device *phydev)
 #define PFUZE300_SW3CONF        0x40
 
 #define PFUZE300_VLDO2CTL       0x6D
-#define PFUZE3000_LDOGCTL	    0x69
-
 #define PFUZE300_SW1AB_SETP(x)	((x - 7000) / 250)
 #define PFUZE300_SW3_SETP(x)	((x - 9000) / 500)
 
@@ -959,16 +957,6 @@ static int setup_pmic_voltages(void)
 			return -1;
 		}
         
-        /* disable Low Power Mode during standby mode */
-		if (i2c_read(CONFIG_PMIC_I2C_SLAVE, PFUZE3000_LDOGCTL, 1, &value, 1)) {
-			printf("Read LDOCTL error!\n");
-			return -1;
-		}
-		value |= 0x1;
-		if (i2c_write(CONFIG_PMIC_I2C_SLAVE, PFUZE3000_LDOGCTL, 1, &value, 1)) {
-			printf("Set LDOCTL error!\n");
-			return -1;
-		}
 	}
 
 #endif  /* defined(CONFIG_PFUZE300_PMIC_I2C)  */
