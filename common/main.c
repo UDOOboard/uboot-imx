@@ -367,6 +367,13 @@ static void process_boot_delay(void)
 #if defined(CONFIG_MENU_SHOW)
 	bootdelay = menu_show(bootdelay);
 #endif
+
+/* Seco APX watchdog Init*/
+#ifdef CONFIG_APX_WATCHDOG
+		apx_watchdog_init();
+#endif
+
+
 # ifdef CONFIG_BOOT_RETRY_TIME
 	init_cmd_timeout ();
 # endif	/* CONFIG_BOOT_RETRY_TIME */

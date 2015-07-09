@@ -126,6 +126,11 @@ typedef struct bd_info {
 #endif /* defined(CONFIG_4xx) */
 	ulong	        bi_arch_number;	/* unique id for this board */
 	ulong	        bi_boot_params;	/* where this board expects params */
+
+
+	unsigned char   board_revision[4]; /* SECO BOARD REV */
+
+
 #ifdef CONFIG_NR_DRAM_BANKS
 	struct {			/* RAM configuration */
 		ulong start;

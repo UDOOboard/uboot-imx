@@ -243,6 +243,9 @@ obj-$(CONFIG_ANDROID_BOOT_IMAGE) += image-android.o
 obj-$(CONFIG_OF_LIBFDT) += image-fdt.o
 obj-$(CONFIG_FIT) += image-fit.o
 obj-$(CONFIG_FIT_SIGNATURE) += image-sig.o
+
+obj-${CONFIG_CMD_SECO_CONFIG} += cmd_seco_config.o
+
 obj-y += memsize.o
 obj-y += stdio.o
 
