@@ -486,12 +486,18 @@
 	"root_add_env=setenv bootargs ${bootargs} ${root_dev}\0"
 	
 
-#define CONFIG_CMD_SET_BOOT                                \
-	"run bootargs_base; "                              \
-	"run root_set_dev; "                               \
-	"run root_add_env; "                               \
-	"run kernel_load; "                                \
-	"run fdt_load; "                                   \
+#define CONFIG_CMD_SET_BOOT                                             \
+	"run bootargs_base; "                                           \
+	"if test \"${run_from_nfs}\" = \"0\"; then "                    \
+		"echo Running in Normal Mode... ; "                     \
+	"else "                                                         \
+		"echo Running in Remote... ; "                          \
+		"run set_ip; "                                          \
+	"fi;"                                                           \
+	"run root_set_dev; "                                            \
+	"run root_add_env; "                                            \
+	"run kernel_load; "                                             \
+	"run fdt_load; "                                                \
 	"bootz ${kernel_loadaddr} - ${fdt_loadaddr}"
 
 

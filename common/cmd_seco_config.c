@@ -132,7 +132,7 @@
 	"root=\'/dev/sda${root_partition} "ENV_FS_COMMON"\'"	
 
 #define ENV_FS_SRC_NFS      \
-	"root=\'/dev/nfs nfsroot=${nfsroot} nolock,wsize=4096,rsize=4096 ip=${ip} "ENV_FS_COMMON"\'"
+	"root=\'/dev/nfs nfsroot=${nfs_ip_server}:${nfs_path} nolock,wsize=4096,rsize=4096 ip=${ip} "ENV_FS_COMMON"\'"
 
 
 #define SAVE_FILESYSTEM_DEVICE_ID(x)       setenv ("root_device_id", (x))
@@ -170,22 +170,30 @@
 #define DEF_NETMASK         "255.255.255.0"
 #define DEF_NFS_PATH        "/targetfs/"
 
-#define GET_IP_LOCAL        getenv ("ip_local")
-#define GET_IP_SERVER       getenv ("ip_server")
-#define GET_NETMASK         getenv ("netmask")
+#define GET_IP_LOCAL        getenv ("nfs_ip_client")
+#define GET_IP_SERVER       getenv ("nfs_ip_server")
+#define GET_NETMASK         getenv ("nfs_netmask")
 #define GET_NFS_PATH        getenv ("nfs_path")
 
+#define SAVE_NFS_USE(x)          setenv ("run_from_nfs", (x))
+#define SAVE_NFS_IP_CLIENT(x)    setenv ("nfs_ip_client", (x))
+#define SAVE_NFS_IP_SERVER(x)    setenv ("nfs_ip_server", (x))
+#define SAVE_NFS_NETMASK(x)      setenv ("nfs_netmask", (x))
+#define SAVE_NFS_PATH(x)         setenv ("nfs_path", (x))
+#define SAVE_NFS_USE_DHCP(x)     setenv ("nfs_use_dhcp", (x))
+
+
 #define SET_IPCONF_NO_DHCP  \
-	"setenv ip \"${ip_local}:::${netmask}::eth0:off\""
+	"setenv ip \"${nfs_ip_client}:::${nfs_netmask}::eth0:off\""
 
 #define SET_IPCONF_DHCP     \
 	"setenv ip \":::::eth0:dhcp\""
 
 #define SET_IP              \
-	"if test \"${use_dhcp}\" = \"0\"; then run set_ipconf_no_dhcp; else run set_ipconf_dhcp; fi"
+	"if test \"${nfs_use_dhcp}\" = \"0\"; then run set_ipconf_no_dhcp; else run set_ipconf_dhcp; fi"
 
 #define SET_NFSROOT         \
-	"setenv nfsroot \"${ip_server}:${nfs_path}\""
+	"setenv nfsroot \"${nfs_ip_server}:${nfs_path}\""
 
 
 
@@ -421,18 +429,13 @@ typedef struct var_env {
 
 static var_env_t env_base [] = {
 	/*  Basic Bootargs  */
-	{ "console_interface" , CONSOLE_INTERFACE },
-	{ "bootargs_base"     , CONFIG_BOOTARGS_BASE },
-//	/*  for FS booting from NFS  */
-//	{ "set_ipconf_no_dhcp" , SET_IPCONF_NO_DHCP },
-//	{ "set_ipconf_dhcp"    , SET_IPCONF_DHCP },
-//	{ "set_ip"             , SET_IP },
-//	{ "set_nfsroot"        , SET_NFSROOT },
-	/*  for command bootcmd  */
-	{ "set_boot_dev"  , SET_BOOT_DEV },
-	{ "load_boot_dev" , LOAD_BOOT_DEV },
-	{ "load_root_dev" , LOAD_ROOT_DEV },
-	{ "bootcmd"       , CMD_BOOT },
+//	{ "console_interface" , CONSOLE_INTERFACE },
+//	{ "bootargs_base"     , CONFIG_BOOTARGS_BASE },
+	/*  for FS booting from NFS  */
+	{ "set_ipconf_no_dhcp" , SET_IPCONF_NO_DHCP },
+	{ "set_ipconf_dhcp"    , SET_IPCONF_DHCP },
+	{ "set_ip"             , SET_IP },
+	{ "set_nfsroot"        , SET_NFSROOT },
 };
 
 
@@ -772,7 +775,7 @@ void select_nfs_parameters (char *ip_local, char *ip_server, char *nfs_path, cha
 			pstr = &str[0];
 		}
 
-		printf ("Insert the address ip of the host machine (enter for current: %s\n", 
+		printf ("Insert the address ip of the host machine (enter for current: %s)\n", 
 				pstr);
 		printf ("> ");
 		line = getline ();
@@ -789,7 +792,7 @@ void select_nfs_parameters (char *ip_local, char *ip_server, char *nfs_path, cha
 			pstr = &str[0];
 		}
 
-		printf ("Insert the nfs path of the host machine (enter for current: %s\n",
+		printf ("Insert the nfs path of the host machine (enter for current: %s)\n",
 				pstr);
 		printf ("> ");
 		line = getline ();
@@ -807,7 +810,7 @@ void select_nfs_parameters (char *ip_local, char *ip_server, char *nfs_path, cha
 				pstr = &str[0];
 			}
 			
-			printf ("Insert an address ip for this board (enter for current: %s\n",
+			printf ("Insert an address ip for this board (enter for current: %s)\n",
 					 pstr);
 			printf ("> ");
 			line = getline ();
@@ -824,7 +827,7 @@ void select_nfs_parameters (char *ip_local, char *ip_server, char *nfs_path, cha
 				pstr = &str[0];
 			}
 
-			printf ("Insert the netmask (enter for current: %s\n",
+			printf ("Insert the netmask (enter for current: %s)\n",
 					pstr);
 			printf ("> ");
 			line = getline ();
@@ -833,7 +836,6 @@ void select_nfs_parameters (char *ip_local, char *ip_server, char *nfs_path, cha
 		strcpy (netmask, strcmp (line, "") == 0 ? pstr : line);
 	}
 
-	free (line);
 }
 
 
@@ -999,17 +1001,34 @@ static int do_seco_config (cmd_tbl_t *cmdtp, int flag, int argc, char * const ar
 			SAVE_FDT_SPI_ADDR(fdt_spi_load_address);
 			SAVE_FDT_SPI_LEN(fdt_spi_load_length);
 			break;
+		case DEV_NFS:
+			SAVE_NFS_USE("1");
+			SAVE_NFS_IP_CLIENT(filesystem_ipaddr_nfs);
+			SAVE_NFS_IP_SERVER(filesystem_server_nfs);
+			SAVE_NFS_NETMASK(filesystem_netmask_nfs);
+			SAVE_NFS_PATH(filesystem_path_nfs);
+			if ( filesystem_use_dhcp == 1 ) {
+				SAVE_NFS_USE_DHCP("1");
+			} else {
+				SAVE_NFS_USE_DHCP("0");
+			}
+			printf ("--- %s   %s   %s    %s\n", filesystem_path_nfs, filesystem_server_nfs, filesystem_ipaddr_nfs, filesystem_netmask_nfs);
+			break;
 		case DEV_TFTP:
 			break;
 		default:
 			break;
 	}
+
+	if ( filesystem_dev_list[filesystem_selected_device].dev_type != DEV_NFS )
+		SAVE_NFS_USE("0");
+
 	sprintf (filesystem_boot_string, "setenv root_dev \'%s\'",
 			filesystem_dev_list[filesystem_selected_device].env_str);
 
 	SAVE_FILESYSTEM_ROOT(filesystem_boot_string);
 	
-//	create_environment (env_base, ARRAY_SIZE(env_base));
+	create_environment (env_base, ARRAY_SIZE(env_base));
 
 
 	
