@@ -33,7 +33,7 @@ CLEAN="CLEAN"
 EXTRA_UART=""
 DEBUG_UART5=""
 RTC_LOW_POWER=""
-COMPILER_PATH="/opt/arm-fsl-linux-gnueabi/bin/arm-fsl-linux-gnueabi-"
+COMPILER_PATH="/opt/compilers/arm-poky-linux-gnueabi_4.9.1/bin/arm-poky-linux-gnueabi/arm-poky-linux-gnueabi-"
 UBOOT_VER="2013"
 
 SUFFIX=""
