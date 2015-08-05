@@ -96,7 +96,11 @@
 #define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
 
+#if defined(CONFIG_MX6Q)
 #define CONFIG_DEFAULT_FDT_FILE		"dts/imx6q-udoo.dtb"
+#else
+#define CONFIG_DEFAULT_FDT_FILE		"dts/imx6dl-udoo.dtb"
+#endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=/boot/boot.scr\0" \
