@@ -68,8 +68,9 @@
 #undef CONFIG_BOOTM_PLAN9
 #undef CONFIG_BOOTM_RTEMS
 
-#undef CONFIG_CMD_EXPORTENV
-#undef CONFIG_CMD_IMPORTENV
+// needed for uEnv.txt support
+//#undef CONFIG_CMD_EXPORTENV
+//#undef CONFIG_CMD_IMPORTENV
 
 #undef CONFIG_CMD_PING
 #undef CONFIG_CMD_DHCP
@@ -168,7 +169,7 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	UPDATE_M4_ENV \
 	CONFIG_VIDEO_MODE \
-	"script=boot.scr\0" \
+	"script=uEnv.txt\0" \
 	"image=/zImage\0" \
 	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
@@ -186,7 +187,7 @@
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
+		"env import -t ${loadaddr} ${filesize};\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
@@ -230,17 +231,16 @@
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev};" \
-	   "if mmc rescan; then " \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
-		   "fi; " \
-	   "else run netboot; fi"
+	"mmc dev ${mmcdev}; " \
+	"if mmc rescan; then " \
+		"if run loadbootscript; then " \
+			"run bootscript; " \
+		"fi; " \
+		"if run loadimage; then " \
+			"run mmcboot; " \
+		"else run netboot; " \
+		"fi; " \
+	"else run netboot; fi"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
