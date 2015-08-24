@@ -103,7 +103,7 @@
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"script=/boot/boot.scr\0" \
+	"script=uEnv.txt\0" \
 	"image=zImage\0" \
 	"console=ttymxc1\0" \
 	"splashpos=m,m\0" \
@@ -133,9 +133,10 @@
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
 		"root=${mmcroot}\0" \
 	"loadbootscript=" \
-		"ext2load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
+		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
+		"env import -t ${loadaddr} ${filesize}" \
+		"run uenvboot\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
@@ -179,16 +180,15 @@
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
-		   "fi; " \
-	   "else run netboot; fi"
+	"mmc dev ${mmcdev}; " \
+		"if mmc rescan; then " \
+		"if run loadbootscript; then " \
+			"run bootscript; fi; " \
+		"if run loadimage; then " \
+				"run mmcboot; " \
+		"else run netboot; " \
+		"fi; " \
+	"else run netboot; fi"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
