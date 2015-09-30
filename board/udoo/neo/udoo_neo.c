@@ -264,8 +264,22 @@ static void setup_iomux_gpio(void)
     gpio_direction_output(IMX_GPIO_NR(4,22), 0); // MUX_D
     gpio_direction_output(IMX_GPIO_NR(4,18), 0); // MUX_E
     gpio_direction_output(IMX_GPIO_NR(4,19), 0); // MUX_F
-
 };
+
+static iomux_v3_cfg_t const wl1831_control_pads[] = {
+	/* WL1831 - WiFi enable */
+	MX6SX_PAD_KEY_COL2__GPIO2_IO_12 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	/* WL1831 - Bt enable */
+	MX6SX_PAD_KEY_ROW2__GPIO2_IO_17 | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+static void setup_wl1831(void)
+{
+	imx_iomux_v3_setup_multiple_pads(wl1831_control_pads, ARRAY_SIZE(wl1831_control_pads));
+
+	gpio_direction_output(IMX_GPIO_NR(2,12), 0); // WL1831 - WiFi enable
+	gpio_direction_output(IMX_GPIO_NR(2,17), 0); // WL1831 - Bt enable
+}
 
 #ifdef CONFIG_QSPI
 
@@ -1151,6 +1165,8 @@ int board_init(void)
 #ifdef CONFIG_QSPI
 	board_qspi_init();
 #endif
+
+	setup_wl1831();
 
 	return 0;
 }
