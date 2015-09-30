@@ -237,6 +237,9 @@ static iomux_v3_cfg_t const gpio_pads[] = {
     MX6SX_PAD_SD1_DATA2__GPIO6_IO_4 | MUX_PAD_CTRL(NO_PAD_CTRL),  // Touch interrupt
     MX6SX_PAD_SD1_DATA3__GPIO6_IO_5 | MUX_PAD_CTRL(NO_PAD_CTRL),  // Touch reset
 
+    MX6SX_PAD_NAND_READY_B__GPIO4_IO_13 | MUX_PAD_CTRL(NO_PAD_CTRL),  // recognition GPIOs - Connected to R184
+    MX6SX_PAD_NAND_ALE__GPIO4_IO_0 | MUX_PAD_CTRL(NO_PAD_CTRL),       // recognition GPIOs - Connected to R185
+
     // Multiplexer pins for GPIO/ADC (J5)
     MX6SX_PAD_RGMII2_TXC__GPIO5_IO_23 | MUX_PAD_CTRL(NO_PAD_CTRL),    // MUX_A
     MX6SX_PAD_RGMII2_RX_CTL__GPIO5_IO_16 | MUX_PAD_CTRL(NO_PAD_CTRL), // MUX_B
@@ -254,6 +257,9 @@ static void setup_iomux_gpio(void)
     gpio_direction_input(IMX_GPIO_NR(4,14)); // Mag interrupt
     gpio_direction_input(IMX_GPIO_NR(4,26)); // Accel interupt
     gpio_direction_input(IMX_GPIO_NR(2,4));  // Touch interrupt
+
+    gpio_direction_input(IMX_GPIO_NR(4,13));  // recognition GPIOs - Connected to R184
+    gpio_direction_input(IMX_GPIO_NR(4,0));   // recognition GPIOs - Connected to R185
 
     gpio_direction_output(IMX_GPIO_NR(4,6), 0);	 // LED
     gpio_direction_output(IMX_GPIO_NR(6,0), 1);  // LED
