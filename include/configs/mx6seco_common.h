@@ -443,7 +443,11 @@
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART   1
 
+#ifdef __MX6_SBC_A62_CONFIG_H
+#define CONFIG_ROOT_DEV_ID       0
+#else
 #define CONFIG_ROOT_DEV_ID       2
+#endif
 #define CONFIG_ROOT_PARTITION    2
 
 #define CONFIG_BOOTARGS_BASE  "setenv bootargs ${console_interface} ${memory} ${cpu_freq} ${videomode} ${root_dev}"
