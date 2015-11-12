@@ -329,9 +329,9 @@ int board_late_init(void)
 int checkboard(void)
 {
 	if (is_cpu_type(MXC_CPU_MX6Q))
-		puts("Board: Udoo Quad\n");
+		puts("Board: UDOO Quad\n");
 	else
-		puts("Board: Udoo DualLite\n");
+		puts("Board: UDOO DualLite\n");
 
 	return 0;
 }

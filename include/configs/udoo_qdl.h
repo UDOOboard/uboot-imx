@@ -1,7 +1,8 @@
 /*
  * Copyright (C) 2013 Freescale Semiconductor, Inc.
+ * Copyright (C) 2015 UDOO Team
  *
- * Configuration settings for Udoo board.
+ * Configuration settings for UDOO Quad/Dual board.
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
