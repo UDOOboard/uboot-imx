@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2013 Freescale Semiconductor, Inc.
+ * Copyright (C) 2015 UDOO Team
  *
  * Author: Fabio Estevam <fabio.estevam@freescale.com>
  *
@@ -69,7 +70,7 @@ static iomux_v3_cfg_t const wdog_pads[] = {
 int mx6_rgmii_rework(struct phy_device *phydev)
 {
 	/*
-	 * Bug: Apparently uDoo does not works with Gigabit switches...
+	 * Bug: Apparently UDOO does not works with Gigabit switches...
 	 * Limiting speed to 10/100Mbps, and setting master mode, seems to
 	 * be the only way to have a successfull PHY auto negotiation.
 	 * How to fix: Understand why Linux kernel do not have this issue.

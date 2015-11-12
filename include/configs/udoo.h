@@ -66,7 +66,7 @@
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"script=boot.scr\0" \
+	"script=uEnv.txt\0" \
 	"image=zImage\0" \
 	"console=ttymxc1\0" \
 	"splashpos=m,m\0" \
@@ -93,12 +93,13 @@
 				"mmc write ${loadaddr} 0x2 ${fw_sz}; " \
 			"fi; "	\
 		"fi\0" \
-	"mmcargs=setenv bootargs console=${console},${baudrate} " \
+	"mmcargs=setenv bootargs console=${console},${baudrate} ${video} ${memory} " \
 		"root=${mmcroot}\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
+		"env import -t ${loadaddr} ${filesize}; " \
+		"run uenvboot\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
@@ -142,9 +143,9 @@
 		"fi;\0" \
 		"findfdt=" \
 			"if test $board_rev = MX6Q ; then " \
-				"setenv fdt_file imx6q-udoo.dtb; fi; " \
+				"setenv fdt_file dts/imx6q-udoo.dtb; fi; " \
 			"if test $board_rev = MX6DL ; then " \
-				"setenv fdt_file imx6dl-udoo.dtb; fi; " \
+				"setenv fdt_file dts/imx6dl-udoo.dtb; fi; " \
 			"if test $fdt_file = undefined; then " \
 				"echo WARNING: Could not determine dtb to use; fi; \0"
 
@@ -153,11 +154,10 @@
 	   "mmc dev ${mmcdev}; if mmc rescan; then " \
 		   "if run loadbootscript; then " \
 			   "run bootscript; " \
-		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
+		   "fi; " \
+		   "if run loadimage; then " \
+			   "run mmcboot; " \
+		   "else run netboot; " \
 		   "fi; " \
 	   "else run netboot; fi"
 
