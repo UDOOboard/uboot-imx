@@ -12,10 +12,12 @@
 #include <asm/arch/iomux.h>
 #include <malloc.h>
 #include <asm/arch/mx6-pins.h>
+#include <asm/arch/mxc_hdmi.h>
 #include <asm/errno.h>
 #include <asm/gpio.h>
 #include <asm/imx-common/iomux-v3.h>
 #include <asm/imx-common/sata.h>
+#include <asm/imx-common/video.h>
 #include <mmc.h>
 #include <fsl_esdhc.h>
 #include <asm/arch/crm_regs.h>
@@ -214,6 +216,54 @@ free_bus:
 	return ret;
 }
 
+
+#if defined(CONFIG_VIDEO_IPUV3)
+static void do_enable_hdmi(struct display_info_t const *dev)
+{
+	imx_enable_hdmi_phy();
+}
+
+struct display_info_t const displays[] = {{
+	.bus	= -1,
+	.addr	= 0,
+	.pixfmt	= IPU_PIX_FMT_RGB24,
+	.detect	= detect_hdmi,
+	.enable	= do_enable_hdmi,
+	.mode	= {
+		.name           = "HDMI",
+		.refresh        = 60,
+		.xres           = 1024,
+		.yres           = 768,
+		.pixclock       = 15385,
+		.left_margin    = 220,
+		.right_margin   = 40,
+		.upper_margin   = 21,
+		.lower_margin   = 7,
+		.hsync_len      = 60,
+		.vsync_len      = 10,
+		.sync           = FB_SYNC_EXT,
+		.vmode          = FB_VMODE_NONINTERLACED
+} } };
+size_t display_count = ARRAY_SIZE(displays);
+
+static void setup_display(void)
+{
+	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+	int reg;
+
+	enable_ipu_clock();
+	imx_setup_hdmi();
+
+	reg = readl(&mxc_ccm->chsccdr);
+	reg |= (CHSCCDR_CLK_SEL_LDB_DI0
+		<< MXC_CCM_CHSCCDR_IPU1_DI0_CLK_SEL_OFFSET);
+	writel(reg, &mxc_ccm->chsccdr);
+}
+#endif /* CONFIG_VIDEO_IPUV3 */
+
+
+
+
 int board_mmc_init(bd_t *bis)
 {
 	SETUP_IOMUX_PADS(usdhc3_pads);
@@ -227,8 +277,21 @@ int board_early_init_f(void)
 {
 	setup_iomux_wdog();
 	setup_iomux_uart();
+	#if defined(CONFIG_VIDEO_IPUV3)
+		puts("setup_display();\n\n");
+		setup_display();
+	#endif
 
 	return 0;
+}
+
+/*
+ * Do not overwrite the console
+ * Use always serial for U-Boot console
+ */
+int overwrite_console(void)
+{
+	return 1;
 }
 
 int board_phy_config(struct phy_device *phydev)
