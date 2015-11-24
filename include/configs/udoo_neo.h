@@ -1,7 +1,9 @@
 /*
  * Copyright 2014-2015 Freescale Semiconductor, Inc.
+ * Copyright Jasbir Matharu
+ * Copyright 2015 UDOO Team
  *
- * Configuration settings for the Freescale i.MX6SX Sabresd board.
+ * Configuration settings for the UDOO NEO board.
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -14,6 +16,8 @@
 #include <linux/sizes.h>
 #include "mx6_common.h"
 #include <asm/imx-common/gpio.h>
+
+#define CONFIG_DDR_MB 1024
 
 #define CONFIG_MX6
 #define CONFIG_ROM_UNIFIED_SECTIONS
@@ -58,8 +62,8 @@
 /* MMC Configuration */
 #define CONFIG_FSL_ESDHC
 #define CONFIG_FSL_USDHC
-#define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC4_BASE_ADDR
-#define CONFIG_SYS_FSL_USDHC_NUM	3
+#define CONFIG_SYS_FSL_ESDHC_ADDR	0
+#define CONFIG_SYS_FSL_USDHC_NUM	2
 
 #define CONFIG_MMC
 #define CONFIG_CMD_MMC
@@ -68,7 +72,7 @@
 #define CONFIG_CMD_EXT2
 #define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
-#define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
+#undef CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
 
 #define CONFIG_BAUDRATE			115200
 
@@ -76,8 +80,9 @@
 #undef CONFIG_BOOTM_PLAN9
 #undef CONFIG_BOOTM_RTEMS
 
-#undef CONFIG_CMD_EXPORTENV
-#undef CONFIG_CMD_IMPORTENV
+/* Needed for uEnv.txt support */
+/*#undef CONFIG_CMD_EXPORTENV*/
+/*#undef CONFIG_CMD_IMPORTENV*/
 
 /* Network */
 #define CONFIG_CMD_PING
@@ -87,14 +92,8 @@
 #define CONFIG_FEC_MXC
 #define CONFIG_MII
 #define CONFIG_FEC_ENET_DEV 0
-
-#if (CONFIG_FEC_ENET_DEV == 0)
 #define IMX_FEC_BASE			ENET_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR          0x1
-#elif (CONFIG_FEC_ENET_DEV == 1)
-#define IMX_FEC_BASE			ENET2_BASE_ADDR
-#define CONFIG_FEC_MXC_PHYADDR          0x2
-#endif
 #define CONFIG_FEC_XCV_TYPE             RGMII
 #define CONFIG_ETHPRIME                 "FEC"
 
@@ -113,21 +112,15 @@
 #define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_SPEED		100000
 
-/* MAX7322 */
-#ifdef CONFIG_FEC_ENABLE_MAX7322
-#define CONFIG_MAX7322_I2C_ADDR		0x68
-#define CONFIG_MAX7322_I2C_BUS		1
-#endif
-
 /* PMIC */
 #define CONFIG_POWER
 #define CONFIG_POWER_I2C
-#define CONFIG_POWER_PFUZE100
-#define CONFIG_POWER_PFUZE100_I2C_ADDR	0x08
-
-/* VIDEO */
-#define CONFIG_VIDEO
-#define CONFIG_VIDEO_GIS
+#define CONFIG_POWER_PFUZE3000
+#define CONFIG_POWER_PFUZE3000_I2C_ADDR	0x08
+#define PFUZE3000_I2C_BUS	0
+#define PFUZE3000_SW1AB_SETP(x)    ((x - 7000) / 250)
+#define PFUZE3000_SW3_SETP(x)      ((x - 9000) / 500)
+#define PFUZE3000_VLDO_SETP(x)     ((x - 8000) / 500)
 
 /* Command definition */
 #include <config_cmd_default.h>
@@ -186,25 +179,26 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	UPDATE_M4_ENV \
 	CONFIG_VIDEO_MODE \
-	"script=boot.scr\0" \
-	"image=zImage\0" \
+	"script=uEnv.txt\0" \
+	"image=/zImage\0" \
 	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=imx6sx-sdb.dtb\0" \
+	"fdt_file=imx6sx-udoo-neo-hdmi-m4.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=1\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
-	"mmcautodetect=yes\0" \
+	"mmcautodetect=no\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=${mmcroot}\0" \
+		"root=${mmcroot} consoleblank=0\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
-		"source\0" \
+		"env import -t ${loadaddr} ${filesize}; " \
+		"run uenvboot\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
@@ -248,17 +242,16 @@
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-	   "mmc dev ${mmcdev};" \
-	   "mmc dev ${mmcdev}; if mmc rescan; then " \
-		   "if run loadbootscript; then " \
-			   "run bootscript; " \
-		   "else " \
-			   "if run loadimage; then " \
-				   "run mmcboot; " \
-			   "else run netboot; " \
-			   "fi; " \
-		   "fi; " \
-	   "else run netboot; fi"
+	"mmc dev ${mmcdev}; " \
+	"if mmc rescan; then " \
+		"if run loadbootscript; then " \
+			"run bootscript; " \
+		"fi; " \
+		"if run loadimage; then " \
+			"run mmcboot; " \
+		"else run netboot; " \
+		"fi; " \
+	"else run netboot; fi"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
@@ -325,9 +318,9 @@
 #define	CONFIG_SF_DEFAULT_MODE		SPI_MODE_0
 #endif
 
-#define CONFIG_SYS_MMC_ENV_DEV		2  /*USDHC4*/
+#define CONFIG_SYS_MMC_ENV_DEV		0  /*USDHC2*/
 #define CONFIG_SYS_MMC_ENV_PART		0	/* user area */
-#define CONFIG_MMCROOT			"/dev/mmcblk3p2"  /* USDHC4 */
+#define CONFIG_MMCROOT			"/dev/mmcblk0p2"  /* USDHC2 */
 
 #if defined(CONFIG_ENV_IS_IN_MMC)
 #define CONFIG_ENV_OFFSET		(8 * SZ_64K)
