@@ -482,6 +482,11 @@ config TARGET_UDOO_QDL
 	bool "Support UDOO Quad/Dual"
 	select CPU_V7
 
+config TARGET_UDOO_NEO
+	bool "Support UDOO Neo"
+	select CPU_V7
+	select SUPPORT_SPL
+
 config TARGET_WANDBOARD
 	bool "Support wandboard"
 	select CPU_V7
@@ -934,6 +939,7 @@ source "board/tqc/tqma6/Kconfig"
 source "board/trizepsiv/Kconfig"
 source "board/ttcontrol/vision2/Kconfig"
 source "board/udoo/quad_dual/Kconfig"
+source "board/udoo/neo/Kconfig"
 source "board/vpac270/Kconfig"
 source "board/wandboard/Kconfig"
 source "board/warp/Kconfig"
