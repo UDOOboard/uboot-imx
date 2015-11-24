@@ -1,0 +1,15 @@
+if TARGET_UDOO_QDL
+
+config SYS_VENDOR
+	default "udoo"
+
+config SYS_BOARD
+	default "quad_dual"
+
+config SYS_SOC
+	default "mx6"
+
+config SYS_CONFIG_NAME
+	default "udoo_qdl"
+
+endif
