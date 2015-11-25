@@ -17,8 +17,6 @@
 #include "mx6_common.h"
 #include <asm/imx-common/gpio.h>
 
-#define CONFIG_DDR_MB 1024
-
 #define CONFIG_MX6
 #define CONFIG_ROM_UNIFIED_SECTIONS
 #define CONFIG_DISPLAY_CPUINFO
@@ -184,7 +182,7 @@
 	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=imx6sx-udoo-neo-hdmi-m4.dtb\0" \
+	"fdt_file=dts/imx6sx-udoo-neo-hdmi-m4.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \

@@ -3,4 +3,5 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 
-obj-y  := neo.o
+obj-y  := neo.o detectboard.o
+obj-$(CONFIG_SPL_BUILD)  += spl.o

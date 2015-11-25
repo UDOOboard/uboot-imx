@@ -15,7 +15,6 @@
 #include <asm/arch/mx6-pins.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/gpio.h>
-#include <asm/imx-common/boot_mode.h>
 #include <asm/imx-common/iomux-v3.h>
 #include <asm/io.h>
 #include <asm/imx-common/mxc_i2c.h>
@@ -30,6 +29,7 @@
 #include <power/pfuze3000_pmic.h>
 #include <usb.h>
 #include <usb/ehci-fsl.h>
+#include "detectboard.h"
 
 #ifdef CONFIG_MXC_RDC
 #include <asm/imx-common/rdc-sema.h>
@@ -91,9 +91,21 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_PUS_47K_UP  | PAD_CTL_SPEED_LOW |		\
 	PAD_CTL_DSE_80ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
+
+#define DIO_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |		\
+	PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED |		\
+	PAD_CTL_DSE_34ohm | PAD_CTL_HYS | PAD_CTL_SRE_FAST)
+#define DIO_PAD_CFG   (MUX_PAD_CTRL(DIO_PAD_CTRL) | MUX_MODE_SION)
+
 int dram_init(void)
 {
-	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
+	int ddr_mb = 1024;
+	int board_variant = detect_board();
+	if (board_variant == UDOO_NEO_TYPE_BASIC || board_variant == UDOO_NEO_TYPE_BASIC_KS) {
+		ddr_mb = 512;
+	}
+	
+	gd->ram_size = ((ulong)ddr_mb * 1024 * 1024);
 
 	return 0;
 }
@@ -963,6 +975,21 @@ int board_late_init(void)
 	board_late_mmc_init();
 #endif
 
+	int board_variant = detect_board();
+
+	if (board_variant == UDOO_NEO_TYPE_BASIC) {
+		setenv("fdt_file", "dts/imx6sx-udoo-neo-basic-hdmi-m4.dtb");
+	}
+	if (board_variant == UDOO_NEO_TYPE_BASIC_KS) {
+		setenv("fdt_file", "dts/imx6sx-udoo-neo-basicks-hdmi-m4.dtb");
+	}
+	if (board_variant == UDOO_NEO_TYPE_EXTENDED) {
+		setenv("fdt_file", "dts/imx6sx-udoo-neo-extended-hdmi-m4.dtb");
+	}
+	if (board_variant == UDOO_NEO_TYPE_FULL) {
+		setenv("fdt_file", "dts/imx6sx-udoo-neo-hdmi-m4.dtb");
+	}
+	
 	return 0;
 }
 
@@ -973,8 +1000,21 @@ u32 get_board_rev(void)
 
 int checkboard(void)
 {
-	puts("Board: MX6SX UDOO NEO\n");
-
+	int board_variant = detect_board();
+	
+	if (board_variant == UDOO_NEO_TYPE_BASIC) {
+		puts("Board: UDOO Neo Basic\n");
+	}
+	if (board_variant == UDOO_NEO_TYPE_BASIC_KS) {
+		puts("Board: UDOO Neo Basic (Kickstarter Edition)\n");
+	}
+	if (board_variant == UDOO_NEO_TYPE_EXTENDED) {
+		puts("Board: UDOO Neo Full\n");
+	}
+	if (board_variant == UDOO_NEO_TYPE_FULL) {
+		puts("Board: UDOO Neo Extended\n");
+	}
+		
 	return 0;
 }
 
@@ -1074,129 +1114,3 @@ void board_recovery_setup(void)
 #endif /*CONFIG_ANDROID_RECOVERY*/
 
 #endif /*CONFIG_FSL_FASTBOOT*/
-
-#ifdef CONFIG_SPL_BUILD
-#include <libfdt.h>
-#include <spl.h>
-#include <asm/arch/mx6-ddr.h>
-
-const struct mx6sx_iomux_ddr_regs mx6_ddr_ioregs = {
-	.dram_dqm0 = 0x00000028,
-	.dram_dqm1 = 0x00000028,
-	.dram_dqm2 = 0x00000028,
-	.dram_dqm3 = 0x00000028,
-	.dram_ras = 0x00000020,
-	.dram_cas = 0x00000020,
-	.dram_odt0 = 0x00000020,
-	.dram_odt1 = 0x00000020,
-	.dram_sdba2 = 0x00000000,
-	.dram_sdcke0 = 0x00003000,
-	.dram_sdcke1 = 0x00003000,
-	.dram_sdclk_0 = 0x00000030,
-	.dram_sdqs0 = 0x00000028,
-	.dram_sdqs1 = 0x00000028,
-	.dram_sdqs2 = 0x00000028,
-	.dram_sdqs3 = 0x00000028,
-	.dram_reset = 0x00000020,
-};
-
-const struct mx6sx_iomux_grp_regs mx6_grp_ioregs = {
-	.grp_addds = 0x00000020,
-	.grp_ddrmode_ctl = 0x00020000,
-	.grp_ddrpke = 0x00000000,
-	.grp_ddrmode = 0x00020000,
-	.grp_b0ds = 0x00000028,
-	.grp_b1ds = 0x00000028,
-	.grp_ctlds = 0x00000020,
-	.grp_ddr_type = 0x000c0000,
-	.grp_b2ds = 0x00000028,
-	.grp_b3ds = 0x00000028,
-};
-
-const struct mx6_mmdc_calibration mx6_mmcd_calib = {
-	.p0_mpwldectrl0 = 0x00290025,
-	.p0_mpwldectrl1 = 0x00220022,
-	.p0_mpdgctrl0 = 0x41480144,
-	.p0_mpdgctrl1 = 0x01340130,
-	.p0_mprddlctl = 0x3C3E4244,
-	.p0_mpwrdlctl = 0x34363638,
-};
-
-static struct mx6_ddr3_cfg mem_ddr = {
-	.mem_speed = 1600,
-	.density = 4,
-	.width = 32,
-	.banks = 8,
-	.rowaddr = 15,
-	.coladdr = 10,
-	.pagesz = 2,
-	.trcd = 1375,
-	.trcmin = 4875,
-	.trasmin = 3500,
-};
-
-static void ccgr_init(void)
-{
-	struct mxc_ccm_reg *ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
-
-	writel(0xFFFFFFFF, &ccm->CCGR0);
-	writel(0xFFFFFFFF, &ccm->CCGR1);
-	writel(0xFFFFFFFF, &ccm->CCGR2);
-	writel(0xFFFFFFFF, &ccm->CCGR3);
-	writel(0xFFFFFFFF, &ccm->CCGR4);
-	writel(0xFFFFFFFF, &ccm->CCGR5);
-	writel(0xFFFFFFFF, &ccm->CCGR6);
-	writel(0xFFFFFFFF, &ccm->CCGR7);
-}
-
-static void spl_dram_init(void)
-{
-	struct mx6_ddr_sysinfo sysinfo = {
-		.dsize = mem_ddr.width/32,
-		.cs_density = 24,
-		.ncs = 1,
-		.cs1_mirror = 0,
-		.rtt_wr = 2,
-		.rtt_nom = 2,		/* RTT_Nom = RZQ/2 */
-		.walat = 1,		/* Write additional latency */
-		.ralat = 5,		/* Read additional latency */
-		.mif3_mode = 3,		/* Command prediction working mode */
-		.bi_on = 1,		/* Bank interleaving enabled */
-		.sde_to_rst = 0x10,	/* 14 cycles, 200us (JEDEC default) */
-		.rst_to_cke = 0x23,	/* 33 cycles, 500us (JEDEC default) */
-	};
-
-	mx6sx_dram_iocfg(mem_ddr.width, &mx6_ddr_ioregs, &mx6_grp_ioregs);
-	mx6_dram_cfg(&sysinfo, &mx6_mmcd_calib, &mem_ddr);
-}
-
-void board_init_f(ulong dummy)
-{
-	/* setup AIPS and disable watchdog */
-	arch_cpu_init();
-
-	ccgr_init();
-
-	/* iomux and setup of i2c */
-	board_early_init_f();
-
-	/* setup GP timer */
-	timer_init();
-
-	/* UART clocks enabled and gd valid - init serial console */
-	preloader_console_init();
-
-	/* DDR initialization */
-	spl_dram_init();
-
-	/* Clear the BSS. */
-	memset(__bss_start, 0, __bss_end - __bss_start);
-
-	/* load/boot image from boot device */
-	board_init_r(NULL, 0);
-}
-
-void reset_cpu(ulong addr)
-{
-}
-#endif
