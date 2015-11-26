@@ -1022,10 +1022,10 @@ int checkboard(void)
 		puts("Board: UDOO Neo Basic (Kickstarter Edition)\n");
 	}
 	if (board_variant == UDOO_NEO_TYPE_EXTENDED) {
-		puts("Board: UDOO Neo Full\n");
+		puts("Board: UDOO Neo Extended\n");
 	}
 	if (board_variant == UDOO_NEO_TYPE_FULL) {
-		puts("Board: UDOO Neo Extended\n");
+		puts("Board: UDOO Neo Full\n");
 	}
 		
 	return 0;
