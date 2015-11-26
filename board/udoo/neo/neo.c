@@ -975,19 +975,31 @@ int board_late_init(void)
 	board_late_mmc_init();
 #endif
 
-	int board_variant = detect_board();
+	char* fdt = getenv("fdt_file");
+	if (strcmp(fdt, "autodetect") == 0) {
+		int board_variant = detect_board();
+		char* newfdt;
 
-	if (board_variant == UDOO_NEO_TYPE_BASIC) {
-		setenv("fdt_file", "dts/imx6sx-udoo-neo-basic-hdmi-m4.dtb");
-	}
-	if (board_variant == UDOO_NEO_TYPE_BASIC_KS) {
-		setenv("fdt_file", "dts/imx6sx-udoo-neo-basicks-hdmi-m4.dtb");
-	}
-	if (board_variant == UDOO_NEO_TYPE_EXTENDED) {
-		setenv("fdt_file", "dts/imx6sx-udoo-neo-extended-hdmi-m4.dtb");
-	}
-	if (board_variant == UDOO_NEO_TYPE_FULL) {
-		setenv("fdt_file", "dts/imx6sx-udoo-neo-hdmi-m4.dtb");
+		switch (board_variant) {
+			case UDOO_NEO_TYPE_BASIC:
+				newfdt = "dts/imx6sx-udoo-neo-basic-hdmi-m4.dtb";
+				break;
+			case UDOO_NEO_TYPE_BASIC_KS:
+				newfdt = "dts/imx6sx-udoo-neo-basicks-hdmi-m4.dtb";
+				break;
+			case UDOO_NEO_TYPE_EXTENDED:
+				newfdt = "dts/imx6sx-udoo-neo-extended-hdmi-m4.dtb";
+				break;
+			case UDOO_NEO_TYPE_FULL:
+				newfdt = "dts/imx6sx-udoo-neo-hdmi-m4.dtb";
+				break;
+			default:
+				return 0;
+		}
+		
+		printf("Autodetected fdt_file to use: %s\n", newfdt);
+		setenv("fdt_file", newfdt);
+		saveenv();
 	}
 	
 	return 0;
