@@ -399,6 +399,7 @@
 #endif
 
 #if defined(CONFIG_ANDROID_SUPPORT)
+#define CONFIG_CMD_BOOTI
 #include "mx6sxsabresdandroid.h"
 #endif
 
