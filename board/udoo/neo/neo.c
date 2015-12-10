@@ -975,33 +975,6 @@ int board_late_init(void)
 #ifdef CONFIG_ENV_IS_IN_MMC
 	board_late_mmc_init();
 #endif
-
-	char* fdt = getenv("fdt_file");
-	if (strcmp(fdt, "autodetect") == 0) {
-		int board_variant = detect_board();
-		char* newfdt;
-
-		switch (board_variant) {
-			case UDOO_NEO_TYPE_BASIC:
-				newfdt = "dts/imx6sx-udoo-neo-basic-hdmi-m4.dtb";
-				break;
-			case UDOO_NEO_TYPE_BASIC_KS:
-				newfdt = "dts/imx6sx-udoo-neo-basicks-hdmi-m4.dtb";
-				break;
-			case UDOO_NEO_TYPE_EXTENDED:
-				newfdt = "dts/imx6sx-udoo-neo-extended-hdmi-m4.dtb";
-				break;
-			case UDOO_NEO_TYPE_FULL:
-				newfdt = "dts/imx6sx-udoo-neo-hdmi-m4.dtb";
-				break;
-			default:
-				return 0;
-		}
-		
-		printf("Autodetected fdt_file to use: %s\n", newfdt);
-		setenv("fdt_file", newfdt);
-		saveenv();
-	}
 	
 	return 0;
 }
@@ -1127,3 +1100,100 @@ void board_recovery_setup(void)
 #endif /*CONFIG_ANDROID_RECOVERY*/
 
 #endif /*CONFIG_FSL_FASTBOOT*/
+
+int isspace(char c)
+{
+    return (c == ' ' || c == '\t' || c == '\n' || c == '\12');
+}
+
+char *trim(char *s) {
+	char *ptr;
+	if (!s)
+		return NULL;   // handle NULL string
+	if (!*s)
+		return s;      // handle empty string
+	for (ptr = s + strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
+	ptr[1] = '\0';
+	
+	return s;
+}
+
+/**
+ * After loading uEnv.txt, we autodetect which fdt file we need to load and if we should start M4.
+ * uEnv.txt can contain:
+ *  - video_output=hdmi|lvds7|lvds15|disabled
+ *    any other value (or if the variable is not specified) will default to "hdmi"
+ *  - m4_enabled=true|false
+ *    any other value (or if the variable is not specified) will default to "true"
+ *  - use_custom_dtb=true|false
+ *    any other value (or if the variable is not specified) will default to "false"
+ * 
+ * Despite the signature, this command does not accept any argument.
+ */
+int do_udooinit(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	int board_variant = detect_board();
+	char* modelfdt;
+
+	switch (board_variant) {
+		case UDOO_NEO_TYPE_BASIC:
+			modelfdt = "imx6sx-udoo-neo-basic";
+			break;
+		case UDOO_NEO_TYPE_BASIC_KS:
+			modelfdt = "imx6sx-udoo-neo-basicks";
+			break;
+		case UDOO_NEO_TYPE_EXTENDED:
+			modelfdt = "imx6sx-udoo-neo-extended";
+			break;
+		case UDOO_NEO_TYPE_FULL:
+			modelfdt = "imx6sx-udoo-neo";
+			break;
+		default:
+			return 0;
+	}
+	
+	char* video_part = "-hdmi";
+	char* video = trim(getenv("video_output"));
+	if (video) {
+		if (strcmp(video, "lvds7") == 0) {
+			video_part = "-lvds7";
+		} else if (strcmp(video, "lvds15") == 0) {
+			video_part = "-lvds15";
+		} else if (strcmp(video, "disabled") == 0) {
+			video_part = "";
+		}
+	}
+	
+	char* m4_part = "-m4";
+	char* m4 = trim(getenv("m4_enabled"));
+	if (m4) {
+		if (strcmp(m4, "false") == 0 || strcmp(m4, "no") == 0 || strcmp(m4, "disabled") == 0) {
+			m4_part = "";
+			setenv("m4mmcargs", "");
+			setenv("m4boot", "");
+			printf("M4: disabled via environment variables.\n");
+
+		}
+	}
+	
+	char* dir_part = "dts";
+	char* customdtb = trim(getenv("use_custom_dtb"));
+	if (customdtb) {
+		if (strcmp(m4, "true") == 0 || strcmp(m4, "yes") == 0 || strcmp(m4, "enabled") == 0) {
+			dir_part = "dts-overlay";
+		}
+	}
+	
+	char fdt_file[100];
+	sprintf(fdt_file, "%s/%s%s%s.dtb", dir_part, modelfdt, video_part, m4_part);
+	
+	printf("Device Tree: %s\n", fdt_file);
+	setenv("fdt_file", fdt_file);
+	
+	return 0;
+}
+
+U_BOOT_CMD(
+	udooinit,	1,	1,	do_udooinit,
+	"(UDOO Neo) initialize M4 core and determine the device tree to load", ""
+);

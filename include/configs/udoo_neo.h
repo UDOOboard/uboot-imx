@@ -149,10 +149,20 @@
 				"sf erase 0x0 ${fw_sz}; " \
 				"sf write ${loadaddr} 0x0 ${filesize}; " \
 			"fi; " \
-		"fi\0" \
-	"m4boot=sf probe 1:0; bootaux "__stringify(CONFIG_SYS_AUXCORE_BOOTDATA)"\0"
+		"fi\0"
+#define M4_STARTUP_ENV \
+	"m4last=/var/opt/m4/m4last.fw\0" \
+	"m4fw=/m4startup.fw\0" \
+	"mmcrootpart=2\0" \
+	"m4last_cmd=ext2load mmc ${mmcdev}:${mmcrootpart} 0x84000000 ${m4last};\0" \
+	"m4fw_cmd=fatload mmc ${mmcdev}:${mmcpart} 0x84000000 ${m4fw}; bootaux 0x84000000\0" \
+	"m4boot=if run m4last_cmd ; then bootaux 0x84000000 ; else run m4fw_cmd ; fi\0" \
+	"m4mmcargs=uart_from_osc clk_ignore_unused cpuidle.off=1\0"
 #else
 #define UPDATE_M4_ENV ""
+#define M4_STARTUP_ENV \
+	"m4boot=\0" \
+	"m4mmcargs=\0"
 #endif
 
 #ifdef CONFIG_VIDEO
@@ -176,6 +186,7 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
 	UPDATE_M4_ENV \
+	M4_STARTUP_ENV \
 	CONFIG_VIDEO_MODE \
 	"script=uEnv.txt\0" \
 	"image=/zImage\0" \
@@ -188,15 +199,15 @@
 	"ip_dyn=yes\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=1\0" \
-	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
+	"mmcrootfstype=ext4\0" \
+	"mmcroot=" CONFIG_MMCROOT " rootwait rw ${mmcrootfstype}\0" \
 	"mmcautodetect=no\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=${mmcroot} consoleblank=0\0" \
+		"root=${mmcroot} ${m4mmcargs} consoleblank=0\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
-		"env import -t ${loadaddr} ${filesize}; " \
-		"run uenvboot\0" \
+		"env import -t ${loadaddr} ${filesize};\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
@@ -245,6 +256,8 @@
 		"if run loadbootscript; then " \
 			"run bootscript; " \
 		"fi; " \
+		"udooinit; " \
+		"run m4boot; " \
 		"if run loadimage; then " \
 			"run mmcboot; " \
 		"else run netboot; " \
