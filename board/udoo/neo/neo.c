@@ -1135,7 +1135,7 @@ int do_udooinit(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			modelfdt = "imx6sx-udoo-neo-extended";
 			break;
 		case UDOO_NEO_TYPE_FULL:
-			modelfdt = "imx6sx-udoo-neo";
+			modelfdt = "imx6sx-udoo-neo-full";
 			break;
 		default:
 			return 0;
