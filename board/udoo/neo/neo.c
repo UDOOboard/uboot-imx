@@ -1092,19 +1092,26 @@ void board_recovery_setup(void)
 
 int isspace(char c)
 {
-    return (c == ' ' || c == '\t' || c == '\n' || c == '\12');
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\12');
 }
+char *trim(char *str)
+{
+	char *end;
 
-char *trim(char *s) {
-	char *ptr;
-	if (!s)
-		return NULL;   // handle NULL string
-	if (!*s)
-		return s;      // handle empty string
-	for (ptr = s + strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
-	ptr[1] = '\0';
-	
-	return s;
+	// Trim leading space
+	while(isspace(*str)) str++;
+
+	if(*str == 0)  // All spaces?
+	return str;
+
+	// Trim trailing space
+	end = str + strlen(str) - 1;
+	while(end > str && isspace(*end)) end--;
+
+	// Write new null terminator
+	*(end+1) = 0;
+
+	return str;
 }
 
 /**
@@ -1142,8 +1149,10 @@ int do_udooinit(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 	
 	char* video_part = "-hdmi";
-	char* video = trim(getenv("video_output"));
+	char* video = getenv("video_output");
+	
 	if (video) {
+		video = trim(video);
 		if (strcmp(video, "lvds7") == 0) {
 			video_part = "-lvds7";
 		} else if (strcmp(video, "lvds15") == 0) {
@@ -1154,8 +1163,9 @@ int do_udooinit(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 	
 	char* m4_part = "-m4";
-	char* m4 = trim(getenv("m4_enabled"));
+	char* m4 = getenv("m4_enabled");
 	if (m4) {
+		m4 = trim(m4);
 		if (strcmp(m4, "false") == 0 || strcmp(m4, "no") == 0 || strcmp(m4, "disabled") == 0) {
 			m4_part = "";
 			setenv("m4mmcargs", "");
@@ -1166,9 +1176,10 @@ int do_udooinit(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 	
 	char* dir_part = "dts";
-	char* customdtb = trim(getenv("use_custom_dtb"));
+	char* customdtb = getenv("use_custom_dtb");
 	if (customdtb) {
-		if (strcmp(m4, "true") == 0 || strcmp(m4, "yes") == 0 || strcmp(m4, "enabled") == 0) {
+		customdtb = trim(customdtb);
+		if (strcmp(customdtb, "true") == 0 || strcmp(customdtb, "yes") == 0 || strcmp(customdtb, "enabled") == 0) {
 			dir_part = "dts-overlay";
 		}
 	}
