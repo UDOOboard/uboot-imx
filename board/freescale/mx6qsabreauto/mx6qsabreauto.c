@@ -778,40 +778,62 @@ int power_init_board(void)
 	if (!pfuze)
 		return -ENODEV;
 
-	ret = pfuze_mode_init(pfuze, APS_PFM);
+	if (is_mx6dqp())
+		ret = pfuze_mode_init(pfuze, APS_APS);
+	else
+		ret = pfuze_mode_init(pfuze, APS_PFM);
+
 	if (ret < 0)
 		return ret;
 
-	/* set SW1AB staby volatage 0.975V*/
-	pmic_reg_read(pfuze, PFUZE100_SW1ABSTBY, &value);
-	value &= ~0x3f;
-	value |= 0x1b;
-	pmic_reg_write(pfuze, PFUZE100_SW1ABSTBY, value);
-
-	/* set SW1AB/VDDARM step ramp up time from 16us to 4us/25mV */
-	pmic_reg_read(pfuze, PFUZE100_SW1ABCONF, &value);
-	value &= ~0xc0;
-	value |= 0x40;
-	pmic_reg_write(pfuze, PFUZE100_SW1ABCONF, value);
-
-	/* set SW1C staby volatage 0.975V*/
-	pmic_reg_read(pfuze, PFUZE100_SW1CSTBY, &value);
-	value &= ~0x3f;
-	value |= 0x1b;
-	pmic_reg_write(pfuze, PFUZE100_SW1CSTBY, value);
-
-	/* set SW1C/VDDSOC step ramp up time to from 16us to 4us/25mV */
-	pmic_reg_read(pfuze, PFUZE100_SW1CCONF, &value);
-	value &= ~0xc0;
-	value |= 0x40;
-	pmic_reg_write(pfuze, PFUZE100_SW1CCONF, value);
-
 	if (is_mx6dqp()) {
+		/* set SW1C staby volatage 1.075V*/
+		pmic_reg_read(pfuze, PFUZE100_SW1CSTBY, &value);
+		value &= ~0x3f;
+		value |= 0x1f;
+		pmic_reg_write(pfuze, PFUZE100_SW1CSTBY, value);
+
+		/* set SW1C/VDDSOC step ramp up time to from 16us to 4us/25mV */
+		pmic_reg_read(pfuze, PFUZE100_SW1CCONF, &value);
+		value &= ~0xc0;
+		value |= 0x40;
+		pmic_reg_write(pfuze, PFUZE100_SW1CCONF, value);
+
 		/* set SW2 staby volatage 0.975V*/
 		pmic_reg_read(pfuze, PFUZE100_SW2STBY, &value);
 		value &= ~0x3f;
 		value |= 0x17;
 		pmic_reg_write(pfuze, PFUZE100_SW2STBY, value);
+
+		/* set SW2/VDDARM step ramp up time to from 16us to 4us/25mV */
+		pmic_reg_read(pfuze, PFUZE100_SW2CONF, &value);
+		value &= ~0xc0;
+		value |= 0x40;
+		pmic_reg_write(pfuze, PFUZE100_SW2CONF, value);
+	} else {
+		/* set SW1AB staby volatage 0.975V*/
+		pmic_reg_read(pfuze, PFUZE100_SW1ABSTBY, &value);
+		value &= ~0x3f;
+		value |= 0x1b;
+		pmic_reg_write(pfuze, PFUZE100_SW1ABSTBY, value);
+
+		/* set SW1AB/VDDARM step ramp up time from 16us to 4us/25mV */
+		pmic_reg_read(pfuze, PFUZE100_SW1ABCONF, &value);
+		value &= ~0xc0;
+		value |= 0x40;
+		pmic_reg_write(pfuze, PFUZE100_SW1ABCONF, value);
+
+		/* set SW1C staby volatage 0.975V*/
+		pmic_reg_read(pfuze, PFUZE100_SW1CSTBY, &value);
+		value &= ~0x3f;
+		value |= 0x1b;
+		pmic_reg_write(pfuze, PFUZE100_SW1CSTBY, value);
+
+		/* set SW1C/VDDSOC step ramp up time to from 16us to 4us/25mV */
+		pmic_reg_read(pfuze, PFUZE100_SW1CCONF, &value);
+		value &= ~0xc0;
+		value |= 0x40;
+		pmic_reg_write(pfuze, PFUZE100_SW1CCONF, value);
 	}
 
 	return 0;
@@ -832,12 +854,20 @@ void ldo_mode_set(int ldo_bypass)
 	if (check_1_2G()) {
 		ldo_bypass = 0;	/* ldo_enable on 1.2G chip */
 		printf("1.2G chip, increase VDDARM_IN/VDDSOC_IN\n");
-		/* increase VDDARM to 1.425V */
-		pmic_reg_read(p, PFUZE100_SW1ABVOL, &value);
-		value &= ~0x3f;
-		value |= 0x2d;
-		pmic_reg_write(p, PFUZE100_SW1ABVOL, value);
 
+		if (is_mx6dqp()) {
+			/* increase VDDARM to 1.425V */
+			pmic_reg_read(p, PFUZE100_SW2VOL, &value);
+			value &= ~0x3f;
+			value |= 0x29;
+			pmic_reg_write(p, PFUZE100_SW2VOL, value);
+		} else {
+			/* increase VDDARM to 1.425V */
+			pmic_reg_read(p, PFUZE100_SW1ABVOL, &value);
+			value &= ~0x3f;
+			value |= 0x2d;
+			pmic_reg_write(p, PFUZE100_SW1ABVOL, value);
+		}
 		/* increase VDDSOC to 1.425V */
 		pmic_reg_read(p, PFUZE100_SW1CVOL, &value);
 		value &= ~0x3f;

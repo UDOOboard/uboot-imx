@@ -825,10 +825,10 @@ int power_init_board(void)
 	 * them, when needed, configure them to our requested voltage.
 	 */
 
-	/* set SW1AB standby volatage 1.3V */
+	/* set SW1AB standby volatage 0.975V */
 	pmic_reg_read(pfuze, PFUZE100_SW1ABSTBY, &value);
 	value &= ~0x3f;
-	value |= PFUZE100_SW1ABC_SETP(13000);
+	value |= PFUZE100_SW1ABC_SETP(9750);
 	pmic_reg_write(pfuze, PFUZE100_SW1ABSTBY, value);
 
 	/* set SW1AB/VDDARM step ramp up time from 16us to 4us/25mV */
@@ -978,7 +978,7 @@ int checkboard(void)
 #define UCTRL_PWR_POL		(1 << 9)
 iomux_v3_cfg_t const usb_otg1_pads[] = {
 	MX6_PAD_GPIO1_IO04__USB_OTG1_PWR | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_GPIO1_IO00__ANATOP_OTG1_ID | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_GPIO1_IO00__ANATOP_OTG1_ID | MUX_PAD_CTRL(OTG_ID_PAD_CTRL),
 };
 
 /*

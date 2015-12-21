@@ -672,42 +672,6 @@ static void setup_epdc_power(void)
 	gpio_direction_output(IMX_GPIO_NR(4, 20), 1);
 }
 
-int setup_waveform_file(ulong waveform_buf)
-{
-	char *fs_argv[5];
-	char addr[17];
-	ulong file_len, mmc_dev;
-
-	if (!check_mmc_autodetect())
-		mmc_dev = getenv_ulong("mmcdev", 10, 0);
-	else
-		mmc_dev = mmc_get_env_devno();
-
-	sprintf(addr, "%lx", waveform_buf);
-
-	fs_argv[0] = "fatload";
-	fs_argv[1] = "mmc";
-	fs_argv[2] = simple_itoa(mmc_dev);
-	fs_argv[3] = addr;
-	fs_argv[4] = getenv("epdc_waveform");
-
-	if (!fs_argv[4])
-		fs_argv[4] = "epdc_splash.bin";
-
-	if (do_fat_fsload(NULL, 0, 5, fs_argv)) {
-		printf("File %s not found on MMC Device %lu \n", fs_argv[4], mmc_dev);
-		return -1;
-	}
-
-	file_len = getenv_hex("filesize", 0);
-	if (!file_len)
-		return -1;
-
-	flush_cache((ulong)addr, file_len);
-
-	return 0;
-}
-
 static void epdc_enable_pins(void)
 {
 	/* epdc iomux settings */
@@ -868,6 +832,39 @@ int power_init_board(void)
 	pmic_reg_read(p, PFUZE300_LDOGCTL, &reg);
 	reg |= 0x1;
 	pmic_reg_write(p, PFUZE300_LDOGCTL, reg);
+
+	/* SW1A/1B mode set to APS/APS */
+	reg = 0x8;
+	pmic_reg_write(p, PFUZE300_SW1AMODE, reg);
+	pmic_reg_write(p, PFUZE300_SW1BMODE, reg);
+
+	/* SW1A/1B standby voltage set to 1.025V */
+	reg = 0xd;
+	pmic_reg_write(p, PFUZE300_SW1ASTBY, reg);
+	pmic_reg_write(p, PFUZE300_SW1BSTBY, reg);
+
+	/* below are for LPSR mode support */
+	pmic_reg_read(p, PFUZE300_SW3MODE, &reg);
+	reg |= 0x20;
+	pmic_reg_write(p, PFUZE300_SW3MODE, reg);
+
+	pmic_reg_read(p, PFUZE300_VLDO1CTL, &reg);
+	reg |= 0x80;
+	pmic_reg_write(p, PFUZE300_VLDO1CTL, reg);
+
+	pmic_reg_read(p, PFUZE300_VLDO3CTL, &reg);
+	reg |= 0x80;
+	pmic_reg_write(p, PFUZE300_VLDO3CTL, reg);
+
+	pmic_reg_read(p, PFUZE300_SW2MODE, &reg);
+	reg |= 0x20;
+	pmic_reg_write(p, PFUZE300_SW2MODE, reg);
+
+	/* decrease SW1B normal voltage to 0.975V */
+	pmic_reg_read(p, PFUZE300_SW1BVOLT, &reg);
+	reg &= ~0x1f;
+	reg |= PFUZE300_SW1AB_SETP(975);
+	pmic_reg_write(p, PFUZE300_SW1BVOLT, reg);
 
 	return 0;
 }

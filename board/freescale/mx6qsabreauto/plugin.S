@@ -108,8 +108,9 @@
 	str r2, [r1, #0x824]
 	str r2, [r1, #0x828]
 
-	ldr r2, =0x24912492
+	ldr r2, =0x24912249
 	str r2, [r0, #0x8c0]
+	ldr r2, =0x24914289
 	str r2, [r1, #0x8c0]
 
 	ldr r2, =0x00000800
@@ -118,12 +119,12 @@
 
 	ldr r2, =0x00020036
 	str r2, [r0, #0x004]
-	ldr r2, =0x09444040
+	ldr r2, =0x24444040
 	str r2, [r0, #0x008]
 
 	ldr r2, =0x898E7955
 	str r2, [r0, #0x00c]
-	ldr r2, =0xFF328F64
+	ldr r2, =0xFF320F64
 	str r2, [r0, #0x010]
 
 	ldr r2, =0x01FF00DB
@@ -145,8 +146,11 @@
 	ldr r2, =0x841A0000
 	str r2, [r0, #0x000]
 
+	ldr r2, =0x00400C58
+	str r2, [r0, #0x890]
+
 	ldr r3, =0x00bb0000
-	ldr r2, =0x00000004
+	ldr r2, =0x00000000
 	str r2, [r3, #0x008]
 	ldr r2, =0x2891E41A
 	str r2, [r3, #0x00c]
