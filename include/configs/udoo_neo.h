@@ -76,19 +76,19 @@
 /* Network */
 #define CONFIG_CMD_PING
 #define CONFIG_CMD_DHCP
+#define CONFIG_CMD_NFS
 #define CONFIG_CMD_MII
 #define CONFIG_CMD_NET
-/* #define CONFIG_FEC_MXC */
+#define CONFIG_FEC_MXC
 #define CONFIG_MII
 #define CONFIG_FEC_ENET_DEV 0
 #define IMX_FEC_BASE			ENET_BASE_ADDR
-#define CONFIG_FEC_MXC_PHYADDR          0x1
-#define CONFIG_FEC_XCV_TYPE             RGMII
-#define CONFIG_ETHPRIME                 "FEC"
+#define CONFIG_FEC_MXC_PHYADDR          0x0
+#define CONFIG_FEC_XCV_TYPE             RMII
+#define CONFIG_ETHPRIME                 "FEC0"
 
 #define CONFIG_PHYLIB
 #define CONFIG_PHY_MICREL
-#define CONFIG_FEC_DMA_MINALIGN		64
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE

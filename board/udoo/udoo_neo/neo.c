@@ -30,6 +30,7 @@
 #include <power/pfuze3000_pmic.h>
 #include <usb.h>
 #include <usb/ehci-fsl.h>
+#include <malloc.h>
 #include "detectboard.h"
 
 #ifdef CONFIG_MXC_RDC
@@ -65,14 +66,14 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_ODE)
 
 #define ENET_PAD_CTRL  (PAD_CTL_PUS_100K_UP | PAD_CTL_PUE |     \
-	PAD_CTL_SPEED_HIGH   |                                   \
-	PAD_CTL_DSE_48ohm   | PAD_CTL_SRE_FAST)
+	PAD_CTL_SPEED_MED   |                                   \
+	PAD_CTL_DSE_40ohm   | PAD_CTL_SRE_FAST)
 
 #define ENET_CLK_PAD_CTRL  (PAD_CTL_SPEED_MED | \
 	PAD_CTL_DSE_120ohm   | PAD_CTL_SRE_FAST)
 
 #define ENET_RX_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |          \
-	PAD_CTL_SPEED_HIGH   | PAD_CTL_SRE_FAST)
+	PAD_CTL_SPEED_MED   | PAD_CTL_SRE_FAST)
 
 #define I2C_PAD_CTRL    (PAD_CTL_PKE | PAD_CTL_PUE |            \
 	PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED |               \
@@ -184,13 +185,13 @@ static iomux_v3_cfg_t const fec1_pads[] = {
 	MX6_PAD_RGMII1_RX_CTL__ENET1_RX_EN | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
 	MX6_PAD_RGMII1_RD0__ENET1_RX_DATA_0 | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
 	MX6_PAD_RGMII1_RD1__ENET1_RX_DATA_1 | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
-	MX6_PAD_RGMII1_RXC__ENET1_RX_CLK | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
 	MX6_PAD_RGMII1_TX_CTL__ENET1_TX_EN | MUX_PAD_CTRL(ENET_PAD_CTRL),
+	MX6_PAD_RGMII1_RXC__ENET1_RX_ER | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
 	MX6_PAD_RGMII1_TD0__ENET1_TX_DATA_0 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_RGMII1_TD1__ENET1_TX_DATA_1 | MUX_PAD_CTRL(ENET_PAD_CTRL),
-	MX6_PAD_RGMII1_TXC__ENET1_RGMII_TXC | MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET1_TX_CLK__ENET1_REF_CLK1 | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
 	MX6_PAD_ENET2_TX_CLK__GPIO2_IO_9 | MUX_PAD_CTRL(ENET_RX_PAD_CTRL),
+	MX6_PAD_ENET1_CRS__GPIO2_IO_1 | MUX_PAD_CTRL(ENET_PAD_CTRL),
 };
 
 static iomux_v3_cfg_t const phy_control_pads[] = {
@@ -201,50 +202,57 @@ static iomux_v3_cfg_t const phy_control_pads[] = {
 static int setup_fec(int fec_id)
 {
 	struct anatop_regs *anatop = (struct anatop_regs *)ANATOP_BASE_ADDR;
-	struct iomuxc_gpr_base_regs *const iomuxc_gpr_regs
-		= (struct iomuxc_gpr_base_regs *) IOMUXC_GPR_BASE_ADDR;
 	int reg;
-
-	/* Use 125M anatop loopback REF_CLK1 for ENET1, clear gpr1[13], gpr1[17]*/
-	clrsetbits_le32(&iomuxc_gpr_regs->gpr[1], IOMUX_GPR1_FEC1_MASK, 0);
 
 	imx_iomux_v3_setup_multiple_pads(phy_control_pads,
 					 ARRAY_SIZE(phy_control_pads));
 
 	/* Reset PHY */
-	gpio_direction_output(IMX_GPIO_NR(5, 4) , 1);
-	udelay(500);
-	gpio_set_value(IMX_GPIO_NR(5, 4), 0);
+	gpio_direction_output(IMX_GPIO_NR(2, 1) , 0);
+	udelay(500 + 10);
+	gpio_set_value(IMX_GPIO_NR(2, 1), 1);
+	udelay(100 + 10);
 
 	reg = readl(&anatop->pll_enet);
 	reg |= BM_ANADIG_PLL_ENET_REF_25M_ENABLE;
 	writel(reg, &anatop->pll_enet);
 
-	return enable_fec_anatop_clock(fec_id, ENET_125MHZ);
+	return enable_fec_anatop_clock(fec_id, ENET_25MHZ);
 }
 
 int board_eth_init(bd_t *bis)
 {
+	uint32_t base = IMX_FEC_BASE;
+	struct mii_dev *bus = NULL;
+	struct phy_device *phydev = NULL;
+	int ret;
+
 	imx_iomux_v3_setup_multiple_pads(fec1_pads, ARRAY_SIZE(fec1_pads));
 
 	setup_fec(CONFIG_FEC_ENET_DEV);
 
-	return cpu_eth_init(bis);
+	bus = fec_get_miibus(base, CONFIG_FEC_ENET_DEV);
+	if (!bus)
+		return 0;
+
+	phydev = phy_find_by_mask(bus, (0x1 << CONFIG_FEC_MXC_PHYADDR), PHY_INTERFACE_MODE_RMII);
+
+	if (!phydev) {
+		free(bus);
+		return 0;
+	}
+	printf("using phy at %d\n", phydev->addr);
+	ret  = fec_probe(bis, CONFIG_FEC_ENET_DEV, base, bus, phydev);
+	if (ret) {
+		printf("FEC MXC: %s:failed\n", __func__);
+		free(phydev);
+		free(bus);
+	}
+	return 0;
 }
 
 int board_phy_config(struct phy_device *phydev)
 {
-	/*
-	 * Enable 1.8V(SEL_1P5_1P8_POS_REG) on
-	 * Phy control debug reg 0
-	 */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x1f);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x8);
-
-	/* rgmii tx clock delay enable */
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x05);
-	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x100);
-
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
 
