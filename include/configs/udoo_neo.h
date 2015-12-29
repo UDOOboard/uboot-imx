@@ -199,10 +199,10 @@
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=1\0" \
 	"mmcrootfstype=ext4\0" \
-	"mmcroot=" CONFIG_MMCROOT " rootwait rw ${mmcrootfstype}\0" \
+	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=no\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=${mmcroot} ${m4mmcargs} consoleblank=0\0" \
+		"root=${mmcroot} rootfstype=${mmcrootfstype} ${m4mmcargs} consoleblank=0\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
