@@ -263,6 +263,8 @@
 		"fi; " \
 	"else run netboot; fi"
 
+#define CONFIG_SYS_BOOTM_LEN	(16 << 20)
+
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP
 #define CONFIG_SYS_HUSH_PARSER
