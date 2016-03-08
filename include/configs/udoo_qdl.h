@@ -83,6 +83,17 @@
 #define CONFIG_IMX_VIDEO_SKIP
 
 
+#ifdef CONFIG_SATABOOT
+	#define UBOOT_DEVICE	"sata"
+	#define CONFIG_MMCROOT	"/dev/sda2"
+	#define SATA_INIT		"sata init;"
+#else
+	#define UBOOT_DEVICE	"mmc"
+	#define CONFIG_MMCROOT	"/dev/mmcblk0p2"
+	#define SATA_INIT		""
+#endif
+
+
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -98,7 +109,8 @@
 	"ip_dyn=yes\0" \
 	"mmcdev=0\0" \
 	"mmcpart=1\0" \
-	"mmcroot=/dev/mmcblk0p2 rootwait rw\0" \
+	"mmcrootfstype=ext4\0" \
+	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"update_sd_firmware_filename=u-boot.imx\0" \
 	"update_sd_firmware=" \
 		"if test ${ip_dyn} = yes; then " \
@@ -114,13 +126,13 @@
 			"fi; "	\
 		"fi\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} ${video} ${memory} " \
-		"root=${mmcroot}\0" \
+		"root=${mmcroot} rootfstype=${mmcrootfstype} ahci_imx.hotplug=1\0" \
 	"loadbootscript=" \
-		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
+		"fatload " UBOOT_DEVICE " ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"env import -t ${loadaddr} ${filesize};\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"loadimage=fatload " UBOOT_DEVICE " ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+	"loadfdt=fatload " UBOOT_DEVICE " ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
@@ -162,7 +174,7 @@
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-		"mmc dev ${mmcdev}; " \
+		"mmc dev ${mmcdev}; " SATA_INIT \
 		"if mmc rescan; then " \
 			"if run loadbootscript; then " \
 				"run bootscript; " \
