@@ -26,15 +26,6 @@
 /* uncomment for PLUGIN mode support */
 /* #define CONFIG_USE_PLUGIN */
 
-/* uncomment for SECURE mode support */
-/* #define CONFIG_SECURE_BOOT */
-
-#ifdef CONFIG_SECURE_BOOT
-#ifndef CONFIG_CSF_SIZE
-#define CONFIG_CSF_SIZE 0x4000
-#endif
-#endif
-
 #ifdef CONFIG_SPL
 #define CONFIG_SPL_LIBCOMMON_SUPPORT
 #define CONFIG_SPL_MMC_SUPPORT
@@ -136,19 +127,6 @@
 #endif
 
 #ifdef CONFIG_CMD_BOOTAUX
-#define UPDATE_M4_ENV \
-	"m4image=m4_qspi.bin\0" \
-	"loadm4image=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${m4image}\0" \
-	"update_m4_from_sd=" \
-		"if sf probe 1:0; then " \
-			"if run loadm4image; then " \
-				"setexpr fw_sz ${filesize} + 0xffff; " \
-				"setexpr fw_sz ${fw_sz} / 0x10000; "	\
-				"setexpr fw_sz ${fw_sz} * 0x10000; "	\
-				"sf erase 0x0 ${fw_sz}; " \
-				"sf write ${loadaddr} 0x0 ${filesize}; " \
-			"fi; " \
-		"fi\0"
 #define M4_STARTUP_ENV \
 	"m4last=/var/opt/m4/m4last.fw\0" \
 	"m4fw=/m4startup.fw\0" \
@@ -158,7 +136,6 @@
 	"m4boot=if run m4last_cmd ; then bootaux 0x84000000 ; else run m4fw_cmd ; fi\0" \
 	"m4mmcargs=uart_from_osc clk_ignore_unused cpuidle.off=1\0"
 #else
-#define UPDATE_M4_ENV ""
 #define M4_STARTUP_ENV \
 	"m4boot=\0" \
 	"m4mmcargs=\0"
@@ -171,6 +148,7 @@
 #define CONFIG_VIDEO_MODE ""
 #endif
 
+/* Linux only */
 #define CONFIG_MFG_ENV_SETTINGS \
 	"mfgtool_args=setenv bootargs console=${console},${baudrate} " \
 		"rdinit=/linuxrc " \
@@ -182,9 +160,9 @@
 	"initrd_high=0xffffffff\0" \
 	"bootcmd_mfg=run mfgtool_args;bootz ${loadaddr} ${initrd_addr} ${fdt_addr};\0" \
 
+/* Linux only */
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
-	UPDATE_M4_ENV \
 	M4_STARTUP_ENV \
 	CONFIG_VIDEO_MODE \
 	"script=uEnv.txt\0" \
@@ -249,6 +227,7 @@
 			"bootz; " \
 		"fi;\0"
 
+/* Linux only */
 #define CONFIG_BOOTCOMMAND \
 	"mmc dev ${mmcdev}; " \
 	"if mmc rescan; then " \
@@ -387,34 +366,36 @@
 #define CONFIG_USB_MAX_CONTROLLER_COUNT 2
 #endif
 
-/*
- * The PCIe support in uboot would bring failures in i.MX6SX PCIe
- * EP/RC validations. Disable PCIe support in uboot here.
- * RootCause: The bit10(ltssm_en) of GPR12 would be set in uboot,
- * thus the i.MX6SX PCIe EP would be cheated that the other i.MX6SX
- * PCIe RC had been configured and trying to setup PCIe link directly,
- * although the i.MX6SX RC is not properly configured at that time.
- * PCIe can be supported in uboot, if the i.MX6SX PCIe EP/RC validation
- * is not running.
- */
-/* #define CONFIG_CMD_PCI */
-#ifdef CONFIG_CMD_PCI
-#define CONFIG_PCI
-#define CONFIG_PCI_PNP
-#define CONFIG_PCI_SCAN_SHOW
-#define CONFIG_PCIE_IMX
-#define CONFIG_PCIE_IMX_PERST_GPIO	IMX_GPIO_NR(2, 0)
-#define CONFIG_PCIE_IMX_POWER_GPIO	IMX_GPIO_NR(2, 1)
-#endif
-
 #define CONFIG_CMD_FUSE
 #ifdef CONFIG_CMD_FUSE
 #define CONFIG_MXC_OCOTP
 #endif
 
 #if defined(CONFIG_ANDROID_SUPPORT)
+#define CONFIG_OF_LOAD_MANUALLY
 #define CONFIG_CMD_BOOTI
 #include "mx6sxsabresdandroid.h"
+#endif
+
+#if defined(CONFIG_ANDROID_SUPPORT)
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#define CONFIG_EXTRA_ENV_SETTINGS \
+	"kernel_loadaddr=0x84808000\0" \
+	"fdt_loadaddr=0x85700000\0" \
+	"script=uEnv.txt\0" \
+	"loadbootscript=" \
+		"ext2load mmc 0:5 ${kernel_loadaddr} ${script};\0" \
+	"bootscript=echo Running bootscript from mmc ...; " \
+		"env import -t ${kernel_loadaddr} ${filesize};\0" \
+	"udoo_boot_init=" \
+		"if run loadbootscript; then " \
+			"run bootscript; " \
+		"fi; " \
+		"udooinit; " \
+		"ext2load mmc 0:5 ${fdt_loadaddr} ${fdt_file}; \0" \
+	"splashpos=m,m\0" \
+	"fdt_high=0xffffffff\0" \
+	"initrd_high=0xffffffff\0"
 #endif
 
 #define CONFIG_CMD_TIME

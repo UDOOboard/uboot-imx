@@ -1658,6 +1658,7 @@ int do_boota(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		flush_cache((ulong)hdr->ramdisk_addr, hdr->ramdisk_size); /* FIXME */
 
 #ifdef CONFIG_OF_LIBFDT
+#ifndef CONFIG_OF_LOAD_MANUALLY
 		/* load the dtb file */
 		if (hdr->second_size && hdr->second_addr) {
 			sector += ALIGN(hdr->ramdisk_size, hdr->page_size) / 512;
@@ -1670,6 +1671,7 @@ int do_boota(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			/* flush cache after read */
 			flush_cache((ulong)hdr->second_addr, hdr->second_size); /* FIXME */
 		}
+#endif
 #endif /*CONFIG_OF_LIBFDT*/
 
 #else /*! CONFIG_MMC*/
