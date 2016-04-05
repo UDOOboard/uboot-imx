@@ -9,6 +9,7 @@
 
 #include "pin_muxing_A62.h"
 #include "../common/proto_seco.h"
+#include "detectboard.h"
 
 
 #define MX6_GPIO_USB_RESET    IMX_GPIO_NR(7, 12)
@@ -47,8 +48,17 @@ struct i2c_pads_info i2c_pad_info2 = {
 void ldo_mode_set(int ldo_bypass) {} 
 
 int dram_init (void) {
-	gd->ram_size = ((ulong)CONFIG_DDR_MB * 1024 * 1024);
+	int ddr_size;
+	int board = detect_board();
 
+	if (board == A62_MX6QD_4x512MB) {
+		ddr_size = 1024;
+	} else if (board == A62_MX6DL_2x256MB) {
+		ddr_size = 512;
+	} else {
+		ddr_size = 1024;
+	}
+	gd->ram_size = ((ulong)ddr_size * 1024 * 1024);
 	return 0;
 }
 
