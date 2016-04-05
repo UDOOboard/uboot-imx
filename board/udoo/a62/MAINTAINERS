@@ -1,0 +1,7 @@
+UDOO NEO BOARD
+M:	Giuseppe Pagano <giuseppe.pagano@seco.com>
+S:	Maintained
+F:	board/udoo/a62/
+F:	include/configs/mx6seco_a62_android.h
+F:	configs/mx6seco_a62_android_defconfig
+

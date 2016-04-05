@@ -28,18 +28,7 @@ config MX6SX
 config MX6UL
 	bool
 
-choice
-	prompt "MX6 board select"
-
-config TARGET_SECOMX6
-	bool "Support secomx6 boards"
-	select CPU_V7
-
-endchoice
-
 config SYS_SOC
 	default "mx6"
-
-source "board/seco/Kconfig"
 
 endif

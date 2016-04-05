@@ -672,7 +672,7 @@ static void stop_activity(void)
 	}
 }
 
-void udc_irq(void)
+void ci_udc_irq(void)
 {
 	struct ci_udc *udc = (struct ci_udc *)controller.ctrl->hcor;
 	unsigned n = readl(&udc->usbsts);
@@ -748,12 +748,12 @@ int usb_gadget_handle_interrupts(void)
 
 	value = readl(&udc->usbsts);
 	if (value)
-		udc_irq();
+		ci_udc_irq();
 
 	return value;
 }
 
-void udc_disconnect(void)
+void ci_udc_disconnect(void)
 {
 	struct ci_udc *udc = (struct ci_udc *)controller.ctrl->hcor;
 	/* disable pullup */
@@ -787,7 +787,7 @@ static int ci_pullup(struct usb_gadget *gadget, int is_on)
 		/* Turn on the USB connection by enabling the pullup resistor */
 		writel(USBCMD_ITC(MICRO_8FRAME) | USBCMD_RUN, &udc->usbcmd);
 	} else {
-		udc_disconnect();
+		ci_udc_disconnect();
 	}
 
 	return 0;
@@ -913,7 +913,7 @@ int usb_gadget_register_driver(struct usb_gadget_driver *driver)
 
 int usb_gadget_unregister_driver(struct usb_gadget_driver *driver)
 {
-	udc_disconnect();
+	ci_udc_disconnect();
 
 	driver->unbind(&controller.gadget);
 	controller.driver = NULL;

@@ -1,0 +1,15 @@
+if TARGET_A62
+
+config SYS_BOARD
+	default "a62"
+
+config SYS_VENDOR
+	default "udoo"
+
+config SYS_SOC
+	default "mx6"
+
+config SYS_CONFIG_NAME
+	default "mx6seco_a62_android"
+
+endif

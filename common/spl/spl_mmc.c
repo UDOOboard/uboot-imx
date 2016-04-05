@@ -16,6 +16,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static int mmc_load_image_raw_sector(struct mmc *mmc, unsigned long sector)
 {
+	int mmc_num;
 	unsigned long err;
 	u32 image_size_sectors;
 	struct image_header *header;
@@ -23,8 +24,12 @@ static int mmc_load_image_raw_sector(struct mmc *mmc, unsigned long sector)
 	header = (struct image_header *)(CONFIG_SYS_TEXT_BASE -
 						sizeof(struct image_header));
 
+	/* Search for the right device */
+	mmc_num = find_mmc_num();
+	printf("SPL: u-boot second stage will be loaded from MMC%d\n", mmc_num);
+
 	/* read image header to find the image size & load address */
-	err = mmc->block_dev.block_read(0, sector, 1, header);
+	err = mmc->block_dev.block_read(mmc_num, sector, 1, header);
 	if (err == 0)
 		goto end;
 
@@ -38,7 +43,7 @@ static int mmc_load_image_raw_sector(struct mmc *mmc, unsigned long sector)
 				mmc->read_bl_len;
 
 	/* Read the header too to avoid extra memcpy */
-	err = mmc->block_dev.block_read(0, sector, image_size_sectors,
+	err = mmc->block_dev.block_read(mmc_num, sector, image_size_sectors,
 					(void *)spl_image.load_addr);
 
 end:
@@ -69,7 +74,12 @@ static int mmc_load_image_raw_partition(struct mmc *mmc, int partition)
 #ifdef CONFIG_SPL_OS_BOOT
 static int mmc_load_image_raw_os(struct mmc *mmc)
 {
-	if (!mmc->block_dev.block_read(0,
+	int mmc_num;
+
+	/* Search for the right device */
+	mmc_num = find_mmc_num();
+
+	if (!mmc->block_dev.block_read(mmc_num,
 				       CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR,
 				       CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS,
 				       (void *)CONFIG_SYS_SPL_ARGS_ADDR)) {
@@ -84,15 +94,51 @@ static int mmc_load_image_raw_os(struct mmc *mmc)
 }
 #endif
 
+int find_mmc_num(void)
+{
+	int n, err;
+	u32 boot_mode;
+	struct mmc *mmc;
+	struct image_header *header;
+
+	/* Max number of devices */
+	for (n=0; n<4; n++) {
+	  mmc = find_mmc_device(n);
+	  if (mmc) {
+	      err = mmc_init(mmc);
+	      if (err)
+	        break;
+	      boot_mode = spl_boot_mode();
+	      if ((boot_mode == MMCSD_MODE_RAW) || (boot_mode == MMCSD_MODE_EMMCBOOT)) {
+		header = (struct image_header *)(CONFIG_SYS_TEXT_BASE -
+					sizeof(struct image_header));
+		err = mmc->block_dev.block_read(n, 
+		    CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR, 1, header);
+	        if (err != 0)
+		  if (image_get_magic(header) == IH_MAGIC) {
+	            return n;
+		  }
+	      }
+
+	  }
+	}
+	return 99;
+}
+
 void spl_mmc_load_image(void)
 {
 	struct mmc *mmc;
 	int err;
+	int mmc_num;
 	u32 boot_mode;
 
 	mmc_initialize(gd->bd);
+
+	/* Search for the right device */
+	mmc_num = find_mmc_num();
+
 	/* We register only one device. So, the dev id is always 0 */
-	mmc = find_mmc_device(0);
+	mmc = find_mmc_device(mmc_num);
 	if (!mmc) {
 #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
 		puts("spl: mmc device not found!!\n");
@@ -159,7 +205,7 @@ void spl_mmc_load_image(void)
 		if (part == 7)
 			part = 0;
 
-		if (mmc_switch_part(0, part)) {
+		if (mmc_switch_part(mmc_num, part)) {
 #ifdef CONFIG_SPL_LIBCOMMON_SUPPORT
 			puts("MMC partition switch failed\n");
 #endif

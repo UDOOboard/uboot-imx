@@ -16,6 +16,8 @@
 #include <environment.h>
 #endif
 
+#include <watchdog.h>
+
 DECLARE_GLOBAL_DATA_PTR;
 
 /*
@@ -81,6 +83,11 @@ void main_loop(void)
 #if defined(CONFIG_UPDATE_TFTP)
 	update_tftp(0UL);
 #endif /* CONFIG_UPDATE_TFTP */
+
+/* APX watchdog Init*/
+#ifdef CONFIG_APX_WATCHDOG
+	apx_watchdog_init();
+#endif
 
 	s = bootdelay_process();
 	if (cli_process_fdt(&s))
