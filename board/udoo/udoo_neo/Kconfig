@@ -1,7 +1,7 @@
 if TARGET_UDOO_NEO
 
 config SYS_BOARD
-	default "neo"
+	default "udoo_neo"
 
 config SYS_VENDOR
 	default "udoo"
