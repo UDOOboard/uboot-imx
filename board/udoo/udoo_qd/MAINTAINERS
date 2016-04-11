@@ -1,0 +1,6 @@
+UDOO BOARD
+M:	Fabio Estevam <fabio.estevam@freescale.com>
+S:	Maintained
+F:	board/udoo/udoo_qd/
+F:	include/configs/udoo_qd.h
+F:	configs/udoo_qd_defconfig

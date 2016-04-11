@@ -478,9 +478,10 @@ config TARGET_VISION2
 	bool "Support vision2"
 	select CPU_V7
 
-config TARGET_UDOO_QDL
+config TARGET_UDOO_QD
 	bool "Support UDOO Quad/Dual"
 	select CPU_V7
+	select SUPPORT_SPL
 
 config TARGET_UDOO_NEO
 	bool "Support UDOO Neo"
@@ -938,6 +939,7 @@ source "board/toradex/colibri_pxa270/Kconfig"
 source "board/tqc/tqma6/Kconfig"
 source "board/trizepsiv/Kconfig"
 source "board/ttcontrol/vision2/Kconfig"
+source "board/udoo/udoo_qd/Kconfig"
 source "board/udoo/udoo_neo/Kconfig"
 source "board/vpac270/Kconfig"
 source "board/wandboard/Kconfig"
