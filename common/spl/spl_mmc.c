@@ -14,6 +14,8 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+int find_mmc_num(void);
+
 static int mmc_load_image_raw_sector(struct mmc *mmc, unsigned long sector)
 {
 	int mmc_num;
