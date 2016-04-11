@@ -384,7 +384,7 @@
 	"fdt_loadaddr=0x85700000\0" \
 	"script=uEnv.txt\0" \
 	"loadbootscript=" \
-		"ext2load mmc 0:5 ${kernel_loadaddr} ${script};\0" \
+		"ext2load mmc 0:4 ${kernel_loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"env import -t ${kernel_loadaddr} ${filesize};\0" \
 	"udoo_boot_init=" \
