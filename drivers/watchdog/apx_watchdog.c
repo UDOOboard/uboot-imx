@@ -28,7 +28,7 @@
 #define WDT_SET_L_GPIO(x,n)     writel(readl(WDT_DR_REG((x))) & ~(1 << (n)) , WDT_DR_REG((x)))
 
 
-void apx_watchdog_reset(void)
+void hw_watchdog_reset(void)
 {
 	//APX Watchdog - Refresh watchdog 
 
@@ -37,7 +37,7 @@ void apx_watchdog_reset(void)
 	WDT_SET_L_GPIO(APX_WDT_TRIGGER_BASE, APX_WDT_TRIGGER_NUM);
 }
 
-void apx_watchdog_init(void)
+void hw_watchdog_init(void)
 {
    	WDT_DIR_OUT_GPIO(APX_WDT_TRIGGER_BASE, APX_WDT_TRIGGER_NUM);
 	WDT_DIR_OUT_GPIO(APX_WDT_ENABLE_BASE, APX_WDT_ENABLE_NUM);

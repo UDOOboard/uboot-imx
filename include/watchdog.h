@@ -42,14 +42,8 @@ int init_func_watchdog_reset(void);
 		#define WATCHDOG_RESET bl hw_watchdog_reset
 	#else
 
-#if defined(CONFIG_APX_WATCHDOG)
-
-	extern void apx_watchdog_reset(void);
-	#define WATCHDOG_RESET apx_watchdog_reset
-#else
 	extern void hw_watchdog_reset(void);
 	#define WATCHDOG_RESET hw_watchdog_reset
-#endif
 
 	#endif /* __ASSEMBLY__ */
 #else
