@@ -86,7 +86,7 @@ void main_loop(void)
 
 /* APX watchdog Init*/
 #ifdef CONFIG_APX_WATCHDOG
-	apx_watchdog_init();
+	hw_watchdog_init();
 #endif
 
 	s = bootdelay_process();
