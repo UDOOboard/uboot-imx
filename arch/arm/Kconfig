@@ -104,6 +104,11 @@ config TARGET_ASPENITE
 	bool "Support aspenite"
 	select CPU_ARM926EJS
 
+config TARGET_A62
+	bool "Support A2 BOARD"
+	select CPU_V7
+	select SUPPORT_SPL
+
 config TARGET_GPLUGD
 	bool "Support gplugd"
 	select CPU_ARM926EJS
@@ -939,6 +944,7 @@ source "board/toradex/colibri_pxa270/Kconfig"
 source "board/tqc/tqma6/Kconfig"
 source "board/trizepsiv/Kconfig"
 source "board/ttcontrol/vision2/Kconfig"
+source "board/udoo/a62/Kconfig"
 source "board/udoo/udoo_qd/Kconfig"
 source "board/udoo/udoo_neo/Kconfig"
 source "board/vpac270/Kconfig"
