@@ -36,6 +36,10 @@
 #endif
 #endif
 
+#ifdef CONFIG_CMD_SATA
+#include <sata.h>
+#endif
+
 #define FASTBOOT_VERSION		"0.4"
 
 #define FASTBOOT_INTERFACE_CLASS	0xff
