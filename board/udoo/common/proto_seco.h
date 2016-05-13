@@ -46,7 +46,8 @@ extern struct usdhc_l usdhc_list[CONFIG_SYS_FSL_USDHC_NUM];
 extern enum mxc_clock usdhc_clk[CONFIG_SYS_FSL_USDHC_NUM];
 
 extern int usdhc_devno[4];
-
+int check_mmc_autodetect (void);
+void board_late_mmc_env_init (void);
 
 /*  __________________________________________________________________________
  * |                                                                          |

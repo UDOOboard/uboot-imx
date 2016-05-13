@@ -39,15 +39,12 @@
 #ifdef CONFIG_CMD_SATA
 #include <asm/imx-common/sata.h>
 #endif
-#ifdef CONFIG_FASTBOOT
+#ifdef CONFIG_FSL_FASTBOOT
 #include <fsl_fastboot.h>
 #ifdef CONFIG_ANDROID_RECOVERY
 #include <recovery.h>
 #endif
-#endif /*CONFIG_FASTBOOT*/
-
-
-
+#endif /*CONFIG_FSL_FASTBOOT*/
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -82,10 +79,9 @@ DECLARE_GLOBAL_DATA_PTR;
  */
 
 iomux_v3_cfg_t const uart_debug_pads[] = {
-	MX6_PAD_EIM_D26__UART2_TX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
-	MX6_PAD_EIM_D27__UART2_RX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
+	IOMUX_PADS(PAD_EIM_D26__UART2_TX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL)),
+	IOMUX_PADS(PAD_EIM_D27__UART2_RX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL)),
 };
-
 
 /*  __________________________________________________________________________
  * |                                                                          |
@@ -93,10 +89,9 @@ iomux_v3_cfg_t const uart_debug_pads[] = {
  * |__________________________________________________________________________|
  */
 iomux_v3_cfg_t const wdt_trigger_pads[] = {
-	 MX6_PAD_EIM_D25__GPIO3_IO25  | MUX_PAD_CTRL(NO_PAD_CTRL),	// WDT_TRIG
-	 MX6_PAD_KEY_ROW2__GPIO4_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL),	// WDT_EN
+	 IOMUX_PADS(PAD_EIM_D25__GPIO3_IO25  | MUX_PAD_CTRL(NO_PAD_CTRL)),	// WDT_TRIG
+	 IOMUX_PADS(PAD_KEY_ROW2__GPIO4_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL)),	// WDT_EN
 };
-
 
 /*  __________________________________________________________________________
  * |                                                                          |
@@ -104,16 +99,15 @@ iomux_v3_cfg_t const wdt_trigger_pads[] = {
  * |__________________________________________________________________________|
  */
 iomux_v3_cfg_t const usdhc3_pads[] = {
-	MX6_PAD_SD3_CLK__SD3_CLK     | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD3_CMD__SD3_CMD     | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD3_DAT0__SD3_DATA0  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD3_DAT1__SD3_DATA1  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD3_DAT2__SD3_DATA2  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD3_DAT3__SD3_DATA3  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD3_DAT5__GPIO7_IO00 | MUX_PAD_CTRL(NO_PAD_CTRL),     // CD
-	MX6_PAD_NANDF_D5__GPIO2_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL),     // PWR
+	IOMUX_PADS(PAD_SD3_CLK__SD3_CLK     | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD3_CMD__SD3_CMD     | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD3_DAT0__SD3_DATA0  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD3_DAT1__SD3_DATA1  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD3_DAT2__SD3_DATA2  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD3_DAT3__SD3_DATA3  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD3_DAT5__GPIO7_IO00 | MUX_PAD_CTRL(NO_PAD_CTRL)),     // CD
+	IOMUX_PADS(PAD_NANDF_D5__GPIO2_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL)),     // PWR
 };
-
 
 /*  __________________________________________________________________________
  * |                                                                          |
@@ -121,18 +115,17 @@ iomux_v3_cfg_t const usdhc3_pads[] = {
  * |__________________________________________________________________________|
  */
 iomux_v3_cfg_t const usdhc4_pads[] = {
-	MX6_PAD_SD4_CLK__SD4_CLK     | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_CMD__SD4_CMD     | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_DAT0__SD4_DATA0  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_DAT1__SD4_DATA1  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_DAT2__SD4_DATA2  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_DAT3__SD4_DATA3  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_DAT4__SD4_DATA4  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_DAT5__SD4_DATA5  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_DAT6__SD4_DATA6  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD4_DAT7__SD4_DATA7  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	IOMUX_PADS(PAD_SD4_CLK__SD4_CLK     | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_CMD__SD4_CMD     | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_DAT0__SD4_DATA0  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_DAT1__SD4_DATA1  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_DAT2__SD4_DATA2  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_DAT3__SD4_DATA3  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_DAT4__SD4_DATA4  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_DAT5__SD4_DATA5  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_DAT6__SD4_DATA6  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD4_DAT7__SD4_DATA7  | MUX_PAD_CTRL(USDHC_PAD_CTRL)),
 };
-
 
 /*  __________________________________________________________________________
  * |                                                                          |
@@ -141,23 +134,20 @@ iomux_v3_cfg_t const usdhc4_pads[] = {
  */
 #ifdef CONFIG_SYS_USE_SPINOR
 iomux_v3_cfg_t const ecspi1_pads[] = {
-	MX6_PAD_EIM_D17__ECSPI1_MISO  | MUX_PAD_CTRL(SPI_PAD_CTRL),
-	MX6_PAD_EIM_D18__ECSPI1_MOSI  | MUX_PAD_CTRL(SPI_PAD_CTRL),
-	MX6_PAD_EIM_D16__ECSPI1_SCLK  | MUX_PAD_CTRL(SPI_PAD_CTRL),
-	MX6_PAD_EIM_EB2__GPIO2_IO30   | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IOMUX_PADS(PAD_EIM_D17__ECSPI1_MISO  | MUX_PAD_CTRL(SPI_PAD_CTRL)),
+	IOMUX_PADS(PAD_EIM_D18__ECSPI1_MOSI  | MUX_PAD_CTRL(SPI_PAD_CTRL)),
+	IOMUX_PADS(PAD_EIM_D16__ECSPI1_SCLK  | MUX_PAD_CTRL(SPI_PAD_CTRL)),
+	IOMUX_PADS(PAD_EIM_EB2__GPIO2_IO30   | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
-
 iomux_v3_cfg_t const ecspi3_pads[] = {
-	MX6_PAD_DISP0_DAT0__ECSPI3_SCLK  | MUX_PAD_CTRL(SPI_PAD_CTRL),
-	MX6_PAD_DISP0_DAT1__ECSPI3_MOSI  | MUX_PAD_CTRL(SPI_PAD_CTRL),
-	MX6_PAD_DISP0_DAT2__ECSPI3_MISO  | MUX_PAD_CTRL(SPI_PAD_CTRL),
-	MX6_PAD_DISP0_DAT3__GPIO4_IO24   | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IOMUX_PADS(PAD_DISP0_DAT0__ECSPI3_SCLK  | MUX_PAD_CTRL(SPI_PAD_CTRL)),
+	IOMUX_PADS(PAD_DISP0_DAT1__ECSPI3_MOSI  | MUX_PAD_CTRL(SPI_PAD_CTRL)),
+	IOMUX_PADS(PAD_DISP0_DAT2__ECSPI3_MISO  | MUX_PAD_CTRL(SPI_PAD_CTRL)),
+	IOMUX_PADS(PAD_DISP0_DAT3__GPIO4_IO24   | MUX_PAD_CTRL(NO_PAD_CTRL)),
 
 };
 #endif  /*  CONFIG_SYS_USE_SPINOR  */
-
-
 
 /*  __________________________________________________________________________
  * |                                                                          |
@@ -167,18 +157,15 @@ iomux_v3_cfg_t const ecspi3_pads[] = {
 #ifdef CONFIG_USB_EHCI_MX6
 
 iomux_v3_cfg_t const usb_otg_pads[] = {
-	MX6_PAD_EIM_D22__USB_OTG_PWR | MUX_PAD_CTRL(NO_PAD_CTRL),
-//	MX6_PAD_GPIO_1__USB_OTG_ID | MUX_PAD_CTRL(NO_PAD_CTRL),
+	IOMUX_PADS(PAD_EIM_D22__USB_OTG_PWR | MUX_PAD_CTRL(NO_PAD_CTRL)),
+//	IOMUX_PADS(PAD_GPIO_1__USB_OTG_ID | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
-
 iomux_v3_cfg_t const usb_hc1_pads[] = {
-	 MX6_PAD_GPIO_17__GPIO7_IO12  | MUX_PAD_CTRL(NO_PAD_CTRL),
-	MX6_PAD_NANDF_CS2__CCM_CLKO2  | MUX_PAD_CTRL(NO_PAD_CTRL),
+	 IOMUX_PADS(PAD_GPIO_17__GPIO7_IO12  | MUX_PAD_CTRL(NO_PAD_CTRL)),
+	IOMUX_PADS(PAD_NANDF_CS2__CCM_CLKO2  | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
 #endif  /*  CONFIG_USB_EHCI_MX6  */
-
-
 
 #endif   /* _BOARD_MX6_SECO_A62_H__ */

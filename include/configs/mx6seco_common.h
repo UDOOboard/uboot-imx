@@ -16,8 +16,6 @@
 #define CONFIG_MX6DL
 #endif
 
-
-
 /* uncomment for PLUGIN mode support */
 /* #define CONFIG_USE_PLUGIN */
 
@@ -58,9 +56,6 @@
 #define CONFIG_MXC_OCOTP
 #endif
 
-
-
-
 /* Command definition */
 #include <config_cmd_default.h>
 
@@ -68,9 +63,6 @@
 #define CONFIG_CMD_BOOTZ
 #define CONFIG_CMD_SETEXPR
 #undef CONFIG_CMD_IMLS
-
-
-
 
 #define CONFIG_BOOTDELAY               3
 
@@ -82,12 +74,6 @@
 
 #define CONFIG_SPI_KERNEL_LOADADDR     0x080000
 #define CONFIG_SPI_KERNEL_LEN          0x380000
-
-
-
-
-
-
 
 #define CONFIG_ARP_TIMEOUT     200UL
 
@@ -108,12 +94,12 @@
 #define CONFIG_STACKSIZE               (128 * 1024)
 
 
-
 #ifndef CONFIG_SYS_NOSMP
 #define CONFIG_SYS_NOSMP
 #endif
 
 #if defined CONFIG_SYS_BOOT_SPINOR
+#define CONFIG_SYS_USE_SPINOR
 #define CONFIG_ENV_IS_IN_SPI_FLASH
 #elif defined CONFIG_SYS_BOOT_EIMNOR
 #define CONFIG_SYS_USE_EIMNOR
@@ -134,7 +120,6 @@
 #ifndef CONFIG_SYS_DCACHE_OFF
 #define CONFIG_CMD_CACHE
 #endif
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -175,7 +160,6 @@
 #define CONFIG_SYS_INIT_SP_ADDR \
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                     TAGs                                   |
@@ -185,8 +169,6 @@
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
 #define CONFIG_REVISION_TAG
-
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -199,8 +181,6 @@
 #define CONFIG_CONS_INDEX		1
 #define CONFIG_BAUDRATE			115200
 
-
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                DISPLAY INFO                                |
@@ -209,8 +189,6 @@
 #define CONFIG_SYS_GENERIC_BOARD
 #define CONFIG_DISPLAY_CPUINFO
 #define CONFIG_DISPLAY_BOARDINFO
-
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -231,8 +209,6 @@
 
 #define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
 
-
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                       SPI                                  |
@@ -240,9 +216,8 @@
 */
 #ifdef CONFIG_SYS_USE_SPI_BUS
 
-	#define CONFIG_CMD_SF
-
 #ifdef CONFIG_SYS_USE_SPINOR
+	#define CONFIG_CMD_SF
 	#define CONFIG_SPI_FLASH
 	#define CONFIG_MXC_SPI
 	#define CONFIG_SF_DEFAULT_SPEED        20 * 1000 * 1000
@@ -258,8 +233,6 @@
 
 #endif
 
-
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                       I2C                                  |
@@ -274,8 +247,6 @@
 	#define CONFIG_I2C_MXC                 1
 
 #endif
-	
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -291,8 +262,6 @@
 	#define CONFIG_LIBATA
 
 #endif
-
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -313,15 +282,11 @@
 
 #endif
 
-
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                ENVIRONMENT                                 |
   |____________________________________________________________________________|
 */
-
-
 #define CONFIG_ENV_SIZE			(8 * 1024)
 
 #if defined(CONFIG_ENV_IS_IN_MMC)
@@ -360,16 +325,14 @@
 
 #endif
 
-
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                    PROMPT                                  |
   |____________________________________________________________________________|
 */
-
+#ifndef CONFIG_MX6QDL
 #define CONFIG_SYS_PROMPT              CONFIG_SECO_PROMPT
-
+#endif
 #define CONFIG_AUTO_COMPLETE
 
 /* Print Buffer Size */
@@ -380,8 +343,6 @@
 #define CONFIG_SYS_HZ                  1000
 
 #define CONFIG_CMDLINE_EDITING
-
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -408,7 +369,6 @@
 	#endif
 	#define CONFIG_IMX_HDMI
 #endif  /*  CONFIG_USE_DISPLAY  */
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -487,7 +447,6 @@
 	"bootz ${kernel_loadaddr} - ${fdt_loadaddr}"
 #endif
 
-
 #define CONFIG_EXTRA_ENV_SETTINGS               \
 	CONFIG_ENV_COMMON			\
 	CONFIG_ENV_BOOTARG_BASE                 \
@@ -498,7 +457,9 @@
 	CONFIG_MMC_TEST                        	\
 	CONFIG_USB_TEST                        	\
 	"bootcmd=" CONFIG_CMD_SET_BOOT "\0"	
-	
 
+#ifdef CONFIG_ANDROID_SUPPORT
+#include "mx6seco_android_common.h"
+#endif
 
 #endif     /* __MX6SECO_COMMON_CONFIG_H */

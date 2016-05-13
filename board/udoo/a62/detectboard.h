@@ -5,11 +5,12 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
+/*TODO: # Android support for A62 Quad/Dual and DualLite/Solo boards with 512 and 2048 memory sizes*/
 
-#define A62_MX6QD_4x512MB         1
-#define A62_MX6QD_4x256MB         2
-#define A62_MX6DL_4x512MB         3
-#define A62_MX6DL_4x256MB         4
-#define A62_MX6DL_2x256MB         5
+#define  SYS_DDR_SIZE_2x256   512
+#define  SYS_DDR_SIZE_4x256   1024
+#define  SYS_DDR_SIZE_4x512   2048
 
-int detect_board(void);
+
+
+

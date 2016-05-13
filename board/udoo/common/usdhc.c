@@ -32,8 +32,9 @@
 
 #include "proto_seco.h"
 
+/*TODO:introduce multi SOC support for this function below to use it as common one. */
 
-int board_mmc_init (bd_t *bis) {
+/*int board_mmc_init (bd_t *bis) {
 	int index, count, status = 0;
 
 	count = ARRAY_SIZE (usdhc_list);
@@ -66,7 +67,7 @@ int board_mmc_init (bd_t *bis) {
 	}
 
 	return status;
-}
+}*/
 
 
 /* FuseMap 

@@ -16,31 +16,55 @@
 
 
 /*  I2C2 - EEPROM, HDMI  */
-struct i2c_pads_info i2c_pad_info1 = {
+ static struct i2c_pads_info mx6q_i2c_pad_info1 = {
 	.scl = {
-		.i2c_mode  = MX6_PAD_KEY_COL3__I2C2_SCL   | PC,
-		.gpio_mode = MX6_PAD_KEY_COL3__GPIO4_IO12 | PC,
+		.i2c_mode  = MX6Q_PAD_KEY_COL3__I2C2_SCL   | PC,
+		.gpio_mode = MX6Q_PAD_KEY_COL3__GPIO4_IO12 | PC,
 		.gp        = IMX_GPIO_NR(4, 12),
 	},
 	.sda = {
-		.i2c_mode  = MX6_PAD_KEY_ROW3__I2C2_SDA   | PC,
-		.gpio_mode = MX6_PAD_KEY_ROW3__GPIO4_IO13 | PC,
+		.i2c_mode  = MX6Q_PAD_KEY_ROW3__I2C2_SDA   | PC,
+		.gpio_mode = MX6Q_PAD_KEY_ROW3__GPIO4_IO13 | PC,
 		.gp        = IMX_GPIO_NR(4, 13),
 	},
 };
 
+static struct i2c_pads_info mx6dl_i2c_pad_info1 = {
+	.scl = {
+		.i2c_mode  = MX6DL_PAD_KEY_COL3__I2C2_SCL   | PC,
+		.gpio_mode = MX6DL_PAD_KEY_COL3__GPIO4_IO12 | PC,
+		.gp        = IMX_GPIO_NR(4, 12),
+	},
+	.sda = {
+		.i2c_mode  = MX6DL_PAD_KEY_ROW3__I2C2_SDA   | PC,
+		.gpio_mode = MX6DL_PAD_KEY_ROW3__GPIO4_IO13 | PC,
+		.gp        = IMX_GPIO_NR(4, 13),
+	},
+};
 
 /*  I2C3 - H29, CN11  */
-struct i2c_pads_info i2c_pad_info2 = {
+static struct i2c_pads_info mx6q_i2c_pad_info2 = {
 	.scl = {
-		.i2c_mode  = MX6_PAD_GPIO_5__I2C3_SCL   | PC,
-		.gpio_mode = MX6_PAD_GPIO_5__GPIO1_IO05 | PC,
+		.i2c_mode  = MX6Q_PAD_GPIO_5__I2C3_SCL   | PC,
+		.gpio_mode = MX6Q_PAD_GPIO_5__GPIO1_IO05 | PC,
 		.gp        = IMX_GPIO_NR(1, 5),
 	},
 	.sda = {
-		.i2c_mode  = MX6_PAD_GPIO_6__I2C3_SDA   | PC,
-		.gpio_mode = MX6_PAD_GPIO_6__GPIO1_IO06 | PC,
-		// used in a62 for i2c touch .gp        = IMX_GPIO_NR(7, 11),
+		.i2c_mode  = MX6Q_PAD_GPIO_6__I2C3_SDA   | PC,
+		.gpio_mode = MX6Q_PAD_GPIO_6__GPIO1_IO06 | PC,
+		.gp        = IMX_GPIO_NR(1, 6),
+	},
+};
+
+static struct i2c_pads_info mx6dl_i2c_pad_info2 = {
+	.scl = {
+		.i2c_mode  = MX6DL_PAD_GPIO_5__I2C3_SCL   | PC,
+		.gpio_mode = MX6DL_PAD_GPIO_5__GPIO1_IO05 | PC,
+		.gp        = IMX_GPIO_NR(1, 5),
+	},
+	.sda = {
+		.i2c_mode  = MX6DL_PAD_GPIO_6__I2C3_SDA   | PC,
+		.gpio_mode = MX6DL_PAD_GPIO_6__GPIO1_IO06 | PC,
 		.gp        = IMX_GPIO_NR(1, 6),
 	},
 };
@@ -48,20 +72,11 @@ struct i2c_pads_info i2c_pad_info2 = {
 void ldo_mode_set(int ldo_bypass) {} 
 
 int dram_init (void) {
-	int ddr_size;
-	int board = detect_board();
 
-	if (board == A62_MX6QD_4x512MB) {
-		ddr_size = 1024;
-	} else if (board == A62_MX6DL_2x256MB) {
-		ddr_size = 512;
-	} else {
-		ddr_size = 1024;
-	}
-	gd->ram_size = ((ulong)ddr_size * 1024 * 1024);
+	gd->ram_size = imx_ddr_size();
+
 	return 0;
 }
-
 
 /*  __________________________________________________________________________
  * |                                                                          |
@@ -70,7 +85,7 @@ int dram_init (void) {
  */
 
 static void setup_iomux_uart (void) {
-	imx_iomux_v3_setup_multiple_pads(uart_debug_pads, ARRAY_SIZE(uart_debug_pads));
+	SETUP_IOMUX_PADS(uart_debug_pads);
 }
 /*  __________________________________________________________________________
  * |__________________________________________________________________________|
@@ -86,7 +101,7 @@ static void setup_iomux_uart (void) {
 #ifdef CONFIG_SYS_USE_SPINOR
 
 static void setup_spinor(void) {
-	imx_iomux_v3_setup_multiple_pads(ecspi1_pads, ARRAY_SIZE(ecspi1_pads));
+	SETUP_IOMUX_PADS(ecspi1_pads);
 	gpio_direction_output(IMX_GPIO_NR(2, 30), 0);
 }
 
@@ -100,8 +115,7 @@ int board_spi_cs_gpio(unsigned bus, unsigned cs)
  * |__________________________________________________________________________|
  */
 
-
-#ifdef CONFIG_FASTBOOT
+#ifdef CONFIG_FSL_FASTBOOT
 
 void board_fastboot_setup(void)
 {
@@ -141,38 +155,12 @@ void board_fastboot_setup(void)
 		printf("unsupported boot devices\n");
 		break;
 	}
-
 }
 
 #ifdef CONFIG_ANDROID_RECOVERY
-
-#define GPIO_VOL_DN_KEY IMX_GPIO_NR(1, 5)
-iomux_v3_cfg_t const recovery_key_pads[] = {
-	(MX6_PAD_GPIO_5__GPIO1_IO05 | MUX_PAD_CTRL(NO_PAD_CTRL)),
-};
-
 int check_recovery_cmd_file(void)
 {
-    int button_pressed = 0;
-    int recovery_mode = 0;
-
-/* this stuff bellow conflicts with the touch, so was commented out */ 
-#if 0
-    recovery_mode = recovery_check_and_clean_flag();
-
-    /* Check Recovery Combo Button press or not. */
-	imx_iomux_v3_setup_multiple_pads(recovery_key_pads,
-			ARRAY_SIZE(recovery_key_pads));
-
-    gpio_direction_input(GPIO_VOL_DN_KEY);
-
-    if (gpio_get_value(GPIO_VOL_DN_KEY) == 0) { /* VOL_DN key is low assert */
-		button_pressed = 1;
-		printf("Recovery key pressed\n");
-    }
-#endif
-
-    return recovery_mode || button_pressed;
+	return recovery_check_and_clean_flag();
 }
 
 void board_recovery_setup(void)
@@ -219,16 +207,15 @@ void board_recovery_setup(void)
 
 #endif /*CONFIG_ANDROID_RECOVERY*/
 
-#endif /*CONFIG_FASTBOOT*/
+#endif /*CONFIG_FSL_FASTBOOT*/
 
 #ifdef CONFIG_IMX_UDC
 iomux_v3_cfg_t const otg_udc_pads[] = {
-	(MX6_PAD_ENET_RX_ER__USB_OTG_ID | MUX_PAD_CTRL(NO_PAD_CTRL)),
+	IOMUX_PADS(PAD_ENET_RX_ER__USB_OTG_ID | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 void udc_pins_setting(void)
 {
-	imx_iomux_v3_setup_multiple_pads(otg_udc_pads,
-			ARRAY_SIZE(otg_udc_pads));
+	SETUP_IOMUX_PADS(otg_udc_pads);
 
 	/*set daisy chain for otg_pin_id on 6q. for 6dl, this bit is reserved*/
     imx_iomux_set_gpr_register(1, 13, 1, 0);
@@ -242,12 +229,11 @@ void udc_pins_setting(void)
  * |__________________________________________________________________________|
  */
 static inline void setup_iomux_apx_watchdog (void) {
-	imx_iomux_v3_setup_multiple_pads (wdt_trigger_pads, ARRAY_SIZE(wdt_trigger_pads));
+	SETUP_IOMUX_PADS(wdt_trigger_pads);
 }
 /*  __________________________________________________________________________
  * |__________________________________________________________________________|
  */
-
 
 
 /*  __________________________________________________________________________
@@ -255,16 +241,19 @@ static inline void setup_iomux_apx_watchdog (void) {
  * |                                   ETHERNET                               |
  * |__________________________________________________________________________|
  */
+
+static iomux_v3_cfg_t const enet_pads[] = {
+	IOMUX_PADS(PAD_KEY_COL2__GPIO4_IO10 | MUX_PAD_CTRL(ENET_PAD_CTRL)),
+};
 inline void enable_ethernet_rail (void) {
 	// Power on Ethernet 
-	imx_iomux_v3_setup_pad(MX6_PAD_KEY_COL2__GPIO4_IO10 | MUX_PAD_CTRL(ENET_PAD_CTRL));
+	SETUP_IOMUX_PADS(enet_pads);
 	gpio_direction_output (IMX_GPIO_NR(4, 10), 1);
 	gpio_set_value (IMX_GPIO_NR(4, 10), 1);
 }
 /*  __________________________________________________________________________
  * |__________________________________________________________________________|
  */
-
 
 
 /*  __________________________________________________________________________
@@ -275,6 +264,7 @@ inline void enable_ethernet_rail (void) {
 #ifdef CONFIG_FSL_ESDHC
 
 #define USDHC3_CD_GPIO	IMX_GPIO_NR(7, 0)
+#define USDHC3_PWR_GPIO IMX_GPIO_NR(2, 5)
 
 /* USDHC map:
  * 	USDHC4  -->  eMMC  -->  FSL_SDHC: 0
@@ -286,7 +276,6 @@ boot_mem_dev_t boot_mem_dev_list[SECO_NUM_BOOT_DEV] = {
 	{ 0x6, 0x7, -1,  -1, -1, "eMMC" },
 };
 
-
 struct fsl_esdhc_cfg usdhc_cfg[CONFIG_SYS_FSL_USDHC_NUM] = {
 	{USDHC4_BASE_ADDR, 0, 8},
 	{USDHC3_BASE_ADDR, 0, 4},
@@ -297,7 +286,6 @@ struct usdhc_l usdhc_list[CONFIG_SYS_FSL_USDHC_NUM] = {
 	{usdhc3_pads, ARRAY_SIZE(usdhc3_pads), USDHC3_CD_GPIO},
 };
 
-
 enum mxc_clock usdhc_clk[CONFIG_SYS_FSL_USDHC_NUM] = {
 	MXC_ESDHC4_CLK,
 	MXC_ESDHC3_CLK,
@@ -305,8 +293,6 @@ enum mxc_clock usdhc_clk[CONFIG_SYS_FSL_USDHC_NUM] = {
 
 /* map the usdhc controller id to the devno given to the board device */
 int usdhc_devno[4] = { -1, -1, 1, 0};
-
-
 
 int board_mmc_getcd (struct mmc *mmc) {
 	struct fsl_esdhc_cfg *cfg = (struct fsl_esdhc_cfg *)mmc->priv;
@@ -334,13 +320,58 @@ int check_mmc_autodetect (void) {
 
 	return 0;
 }
+
+int board_mmc_init(bd_t *bis){
+#ifndef CONFIG_SPL_BUILD
+	int ret;
+	int i;
+	for (i = 0; i < CONFIG_SYS_FSL_USDHC_NUM; i++) {
+		switch (i) {
+		case 0:
+			SETUP_IOMUX_PADS(usdhc4_pads);
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+			break;			
+		case 1:
+			SETUP_IOMUX_PADS(usdhc3_pads);
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);		
+			gpio_direction_input(USDHC3_CD_GPIO);
+			gpio_direction_output(USDHC3_PWR_GPIO, 1);
+			break;
+			
+		default:
+			printf("Warning: you configured more USDHC controllers"
+			       "(%d) then supported by the board (%d)\n",
+			       i + 1, CONFIG_SYS_FSL_USDHC_NUM);
+			return -EINVAL;
+		}
+
+		ret = fsl_esdhc_initialize(bis, &usdhc_cfg[i]);
+		if (ret)
+			return ret;
+	}
+
+	return 0;
+#else
+	struct src *psrc = (struct src *)SRC_BASE_ADDR;
+	unsigned reg = readl(&psrc->sbmr1) >> 11;	
+	printf("mmc port %d\n", reg & 0x3);
+
+	/* We use SD to boot from*/
+	SETUP_IOMUX_PADS(usdhc3_pads);
+	usdhc_cfg[1].esdhc_base = USDHC3_BASE_ADDR;
+	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+	gpio_direction_input(USDHC3_CD_GPIO);
+	gpio_direction_output(USDHC3_PWR_GPIO, 1);
+	gd->arch.sdhc_clk = usdhc_cfg[1].sdhc_clk;
+
+	return fsl_esdhc_initialize(bis, &usdhc_cfg[1]);
+#endif
+}
 #endif  /*  CONFIG_FSL_ESDHC  */
 
 /*  __________________________________________________________________________
  * |__________________________________________________________________________|
  */
-
-
 
 /*  __________________________________________________________________________
  * |                                                                          |
@@ -372,7 +403,6 @@ int board_ehci_hcd_init (int port) {
 	}
 	return 0;
 }
-
 
 int board_ehci_power (int port, int on) {
 	switch (port) {
@@ -418,7 +448,6 @@ int board_init (void) {
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
-
 	print_boot_device ();
 
 	return 0;
@@ -428,7 +457,6 @@ int board_init (void) {
  */
 
 
-
 /*
  * Do not overwrite the console
  * Use always serial for U-Boot console
@@ -436,8 +464,6 @@ int board_init (void) {
 int overwrite_console (void) {
 	return 1;
 }
-
-
 
 int board_early_init_f (void) {
 	setup_iomux_uart();

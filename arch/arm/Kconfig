@@ -105,7 +105,7 @@ config TARGET_ASPENITE
 	select CPU_ARM926EJS
 
 config TARGET_A62
-	bool "Support A2 BOARD"
+	bool "Support A62 BOARD"
 	select CPU_V7
 	select SUPPORT_SPL
 

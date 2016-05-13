@@ -6,17 +6,14 @@
  * SPDX-License-Identifier:     GPL-2.0+
  */
 
-#ifndef __MX6_SBC_A94_CONFIG_H
-#define __MX6_SBC_A94_CONFIG_H
+#ifndef __MX6_SBC_A62_CONFIG_H
+#define __MX6_SBC_A62_CONFIG_H
 
 #include <asm/arch/imx-regs.h>
 #include <linux/sizes.h>
 #include "mx6_common.h"
 
 #include <asm/imx-common/gpio.h>
-
-#include "mx6seco_android_common.h"
-
 
 
 /* ____________________________________________________________________________
@@ -28,20 +25,16 @@
 #define CONFIG_MACH_TYPE               MACH_SECO_TYPE
 
 #ifdef CONFIG_MX6Q
-	#define CONFIG_MX6Q_SECO_A94
+	#define CONFIG_MX6Q_SECO_A62
 #elif defined (CONFIG_MX6DL)
-	#define CONFIG_MX6DL_SECO_A94
+	#define CONFIG_MX6DL_SECO_A62
 #elif defined (CONFIG_MX6S)
-	#define CONFIG_MX6S_SECO_A94
+	#define CONFIG_MX6S_SECO_A62
 #endif
 
-
-#define CONFIG_SYS_USE_SPI_BUS
-#define CONFIG_SYS_USE_SPINOR
 #define CONFIG_SYS_USE_I2C_BUS
 
-#define CONFIG_DEFAULT_FDT_FILE		"imx6dl-seco_A94.dtb"
-
+#define CONFIG_DEFAULT_FDT_FILE		"imx6dl-seco_A62.dtb"
 
 /* Boot device:
  * 	eMMC
@@ -50,6 +43,12 @@
  */
 #define SECO_NUM_BOOT_DEV 2
 
+/* FLASH and environment organization */
+#define CONFIG_SYS_NO_FLASH
+
+#ifdef ENV_SPI
+ 	#define CONFIG_SYS_BOOT_SPINOR	
+#endif
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -59,14 +58,11 @@
 #define CONFIG_MXC_UART_BASE            UART2_BASE
 #define CONFIG_CONSOLE_DEV              "ttymxc1"
 
-
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                   WATCHDOG                                 |
   |____________________________________________________________________________|
  */
-
 #define CONFIG_APX_WATCHDOG
 #define CONFIG_HW_WATCHDOG
 
@@ -74,53 +70,9 @@
 #define APX_WDT_TRIGGER_NUM       25
 
 #define APX_WDT_ENABLE_BASE       GPIO4_BASE_ADDR
-#define APX_WDT_ENABLE_NUM        6
+#define APX_WDT_ENABLE_NUM        11
 
 
-
-/* ____________________________________________________________________________
-  |                                                                            |
-  |                                       SPI                                  |
-  |____________________________________________________________________________|
-*/
-#ifdef CONFIG_SYS_USE_SPI_BUS
-
-#ifdef CONFIG_SYS_USE_SPINOR
-	#define CONFIG_SPI_FLASH_SPANSION
-	#define CONFIG_SF_DEFAULT_BUS          0
-#endif
-
-#ifdef CONFIG_SYS_USE_SPINOR
-	#define CONFIG_SF_DEFAULT_CS          (0|(IMX_GPIO_NR(2, 30)<<8))
-#endif
-
-#endif
-
-#define CONFIG_CMD_SF
-#ifdef CONFIG_CMD_SF
-#define CONFIG_SPI_FLASH
-#define CONFIG_SPI_FLASH_SST
-#define CONFIG_MXC_SPI_CSHOLD
-#define CONFIG_MXC_SPI
-#define CONFIG_SF_DEFAULT_BUS  0
-#define CONFIG_SF_DEFAULT_CS   (0|(IMX_GPIO_NR(2, 30)<<8))
-#define CONFIG_SF_DEFAULT_MODE (SPI_MODE_0)
-#endif
-
-#define CONFIG_USB_FASTBOOT_BUF_ADDR   CONFIG_SYS_LOAD_ADDR
-#define CONFIG_USB_FASTBOOT_BUF_SIZE   0x19000000
-
-/* FLASH and environment organization */
-#define CONFIG_SYS_NO_FLASH
-
-#define CONFIG_ENV_SIZE                 (8 * 1024)
-#define ENV_SPI 1
-
-#ifdef ENV_MMC
- 	#define CONFIG_ENV_IS_IN_MMC
-#elif defined(ENV_SPI)
- 	#define CONFIG_SYS_BOOT_SPINOR	1
-#endif
 /* ____________________________________________________________________________
   |                                                                            |
   |                                       I2C                                  |
@@ -131,11 +83,7 @@
 	#define CONFIG_SYS_I2C_BASE                   I2C1_BASE_ADDR
 	#define CONFIG_SYS_I2C_SPEED                  100000
 
-
-
 #endif
-
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -148,8 +96,6 @@
 	#define CONFIG_DWC_AHSATA_PORT_ID             0
 
 #endif
-
-
 
 /* ____________________________________________________________________________
   |                                                                            |
@@ -165,8 +111,6 @@
 
 #endif
 
-
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                    PROMPT                                  |
@@ -181,19 +125,35 @@
 #endif
 
 
-
 /* ____________________________________________________________________________
   |                                                                            |
   |                                ENVIRONMENT                                 |
   |____________________________________________________________________________|
 */
-
 #define CONFIG_MMCROOT			"/dev/mmcblk0p3"  /* SDHC4 */
-#define CONFIG_CMD_SET_BOOT_ANDROID 	"boota mmc1"
 
 #define CONFIG_CMD_BOOTI
 
 #include "mx6seco_common.h"
+/* ____________________________________________________________________________
+  |                                                                            |
+  |                                       SPI                                  |
+  |____________________________________________________________________________|
+*/
+#ifdef CONFIG_SYS_USE_SPINOR
+	#define CONFIG_SPI_FLASH_SPANSION
+	#define CONFIG_SF_DEFAULT_BUS          0
+	#define CONFIG_SF_DEFAULT_CS          (0|(IMX_GPIO_NR(2, 30)<<8))
+#endif
+
+#ifdef CONFIG_CMD_SF
+	#define CONFIG_SPI_FLASH_SST
+	#define CONFIG_MXC_SPI_CSHOLD
+	#define CONFIG_SF_DEFAULT_BUS  0
+	#define CONFIG_SF_DEFAULT_CS   (0|(IMX_GPIO_NR(2, 30)<<8))
+#endif
+
+#undef CONFIG_SUPPORT_EMMC_BOOT
 
 /* USB Configs */
 #define CONFIG_CMD_USB
@@ -208,7 +168,7 @@
 #define CONFIG_USB_MAX_CONTROLLER_COUNT         2       /* Enabled USB controller number */
 
 #define CONFIG_SYS_FSL_USDHC_NUM                2
-#define CONFIG_SYS_MMC_ENV_DEV                  1	/* SDHC1 */
+#define CONFIG_SYS_MMC_ENV_DEV                  1	/* USDHC3 */
 #define CONFIG_SYS_MMC_ENV_PART                 0       /* user partition */
 
 
@@ -232,5 +192,4 @@
 #define CONFIG_PCIE_IMX_PERST_GPIO	IMX_GPIO_NR(7, 12)
 #define CONFIG_PCIE_IMX_POWER_GPIO	IMX_GPIO_NR(3, 19)
 #endif
-
-#endif                         /* __MX6_QUADMO_747_CONFIG_H */
+#endif                         /* __MX6_SBC_A62_CONFIG_H */
