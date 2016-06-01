@@ -61,6 +61,22 @@
 #undef CONFIG_BOOTCOMMAND
 
 #define CONFIG_EXTRA_ENV_SETTINGS					\
+	"kernel_loadaddr=0x14008000\0" \
+	"fdt_loadaddr=0x14f00000\0" \
+	"script=uEnv.txt\0" \
+	"uenvlist0=ext2ls mmc 0:4 ${script};\0" \
+	"mmc_sel=" \
+		"if run uenvlist0; then setenv mmc_cur 0; else setenv mmc_cur 1; fi;\0" \
+	"loadbootscript=" \
+		"ext2load mmc ${mmc_cur}:4 ${kernel_loadaddr} ${script};\0" \
+	"bootscript=echo Running bootscript from mmc ...; " \
+		"env import -t ${kernel_loadaddr} ${filesize};\0" \
+	"a62_boot_init=" \
+		"if run loadbootscript; then " \
+			"run bootscript; " \
+		"fi; " \
+		"a62init; " \
+		"ext2load mmc ${mmc_cur}:5 ${fdt_loadaddr} ${fdt_file}; \0" \
 	"splashpos=m,m\0"	  \
 	"fdt_high=0xffffffff\0"	  \
 	"initrd_high=0xffffffff\0" \

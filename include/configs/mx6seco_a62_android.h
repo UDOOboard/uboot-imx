@@ -34,6 +34,7 @@
 
 #define CONFIG_SYS_USE_I2C_BUS
 
+#define CONFIG_OF_LOAD_MANUALLY
 #define CONFIG_DEFAULT_FDT_FILE		"imx6dl-seco_A62.dtb"
 
 /* Boot device:

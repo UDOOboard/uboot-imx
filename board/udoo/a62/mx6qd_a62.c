@@ -135,20 +135,20 @@ void board_fastboot_setup(void)
 	    if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "mmc0");
 	    if (!getenv("bootcmd"))
-			setenv("bootcmd", "boota mmc0");
+			setenv("bootcmd", "run mmc_sel; run a62_boot_init; boota mmc0");
 	    break;
 	case SD3_BOOT:
 	case MMC3_BOOT:
 	    if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "mmc1");
 	    if (!getenv("bootcmd"))
-			setenv("bootcmd", "boota mmc1");
+			setenv("bootcmd", "run mmc_sel; run a62_boot_init; boota mmc1");
 	    break;
 	case MMC4_BOOT:
 	    if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "mmc2");
 	    if (!getenv("bootcmd"))
-			setenv("bootcmd", "boota mmc2");
+			setenv("bootcmd", "run mmc_sel; run a62_boot_init; boota mmc2");
 	    break;
 #endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
 	default:
@@ -503,5 +503,92 @@ int board_late_init (void) {
 	board_late_mmc_env_init();
 #endif
 
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	if (is_cpu_type(MXC_CPU_MX6Q))
+		setenv("board_rev", "MX6Q");
+	else
+		setenv("board_rev", "MX6DL");
+#endif
 	return ret;
 }
+
+
+int isspace(char c)
+{
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\12');
+}
+char *trim(char *str)
+{
+	char *end;
+
+	// Trim leading space
+	while(isspace(*str)) str++;
+
+	if(*str == 0)  // All spaces?
+	return str;
+
+	// Trim trailing space
+	end = str + strlen(str) - 1;
+	while(end > str && isspace(*end)) end--;
+
+	// Write new null terminator
+	*(end+1) = 0;
+
+	return str;
+}
+
+/**
+ * After loading uEnv.txt, we autodetect which fdt file we need to load.
+ * uEnv.txt can contain:
+ *  - video_output=hdmi|lvds7|lvds15
+ *    any other value (or if the variable is not specified) will default to "hdmi"
+ *  - use_custom_dtb=true|false
+ *    any other value (or if the variable is not specified) will default to "false"
+ * 
+ * Despite the signature, this command does not accept any argument.
+ */
+int do_a62init(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	char* modelfdt;
+
+	if (is_cpu_type(MXC_CPU_MX6Q)) {
+		modelfdt = "imx6q-a62";
+	} else {
+		modelfdt = "imx6dl-a62";
+	}
+	
+	char* video_part = "-hdmi";
+	char* video = getenv("video_output");
+	
+	if (video) {
+		video = trim(video);
+		if (strcmp(video, "lvds7") == 0) {
+			video_part = "-lvds7";
+		} else if (strcmp(video, "lvds15") == 0) {
+			video_part = "-lvds15";
+		}
+	}
+	
+	char* dir_part = "dts";
+	char* customdtb = getenv("use_custom_dtb");
+	if (customdtb) {
+		customdtb = trim(customdtb);
+		if (strcmp(customdtb, "true") == 0 || strcmp(customdtb, "yes") == 0 || strcmp(customdtb, "enabled") == 0) {
+			dir_part = "dts-overlay";
+		}
+	}
+	
+	char fdt_file[100];
+	sprintf(fdt_file, "%s/%s%s.dtb", dir_part, modelfdt, video_part);
+	
+	printf("Device Tree: %s\n", fdt_file);
+	setenv("fdt_file", fdt_file);
+	
+	return 0;
+}
+
+
+U_BOOT_CMD(
+	a62init,	1,	1,	do_a62init,
+	"(A62) determine the device tree to load", ""
+);

@@ -456,6 +456,7 @@
 	CONFIG_ENV_ROOT                        	\
 	CONFIG_MMC_TEST                        	\
 	CONFIG_USB_TEST                        	\
+	"script=uEnv.txt\0" 			\
 	"bootcmd=" CONFIG_CMD_SET_BOOT "\0"	
 
 #ifdef CONFIG_ANDROID_SUPPORT
