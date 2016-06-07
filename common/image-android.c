@@ -79,7 +79,15 @@ int android_image_get_kernel(const struct andr_img_hdr *hdr, int verify,
 					serialnr.low);
 #endif
 
-	setenv("bootargs", commandline);
+	char *lcd_density = getenv("lcd_density");
+	if (lcd_density) {
+		char lcdcommandline[ANDR_BOOT_ARGS_SIZE];
+		sprintf(lcdcommandline, "%s android.lcd_density=%s", commandline, lcd_density);
+		printf("Kernel command line with LCD density: %s\n", lcdcommandline);
+		setenv("bootargs", lcdcommandline);
+	} else {
+		setenv("bootargs", commandline);
+	}
 
 	if (os_data) {
 		*os_data = (ulong)hdr;
