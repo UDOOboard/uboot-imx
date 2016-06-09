@@ -564,6 +564,9 @@ int do_a62init(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		video = trim(video);
 		if (strcmp(video, "lvds7") == 0) {
 			video_part = "-lvds7";
+#ifdef CONFIG_ANDROID_SUPPORT
+			setenv("lcd_density", "128");
+#endif
 		} else if (strcmp(video, "lvds15") == 0) {
 			video_part = "-lvds15";
 		}
