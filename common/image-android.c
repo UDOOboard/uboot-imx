@@ -83,13 +83,22 @@ int android_image_get_kernel(const struct andr_img_hdr *hdr, int verify,
 
 	char *root_device = getenv("root_device");
 	char *lcd_density = getenv("lcd_density");
+	char rootdev_opt[32];
+	char lcd_opt[32];
+
+	if (root_device)
+		sprintf(rootdev_opt, "androidboot.root_device=%s", root_device);
+	else
+		sprintf(rootdev_opt, "");
 
 	if (lcd_density) {
-		sprintf(newcommandline, "%s android.lcd_density=%s androidboot.root_device=%s", commandline, lcd_density, root_device);
-		printf("Kernel command line with LCD density: %s\n", newcommandline);
+		sprintf(lcd_opt, "android.lcd_density=%s", lcd_density);
+		printf("Kernel command line with LCD density: %s\n", lcd_density);
 	} else {
-		sprintf(newcommandline, "%s androidboot.root_device=%s", commandline, root_device);
+		sprintf(lcd_opt, "");
 	}
+
+	sprintf(newcommandline, "%s %s %s", commandline, rootdev_opt, lcd_opt);
 	setenv("bootargs", newcommandline);
 
 	if (os_data) {
