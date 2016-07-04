@@ -122,6 +122,8 @@ void board_fastboot_setup(void)
 	switch (get_boot_device()) {
 #if defined(CONFIG_FASTBOOT_STORAGE_SATA)
 	case SATA_BOOT:
+		if (!getenv("root_device"))
+			setenv("root_device", "sata");
 		if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "sata");
 		if (!getenv("bootcmd"))
@@ -132,24 +134,33 @@ void board_fastboot_setup(void)
 	case SD2_BOOT:
 	case MMC1_BOOT:
 	case MMC2_BOOT:
+	case MMC4_BOOT:
+	    if (!getenv("mmc_cur"))
+			setenv("mmc_cur", "0");
+	    if (!getenv("root_device"))
+			setenv("root_device", "emmc");
 	    if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "mmc0");
 	    if (!getenv("bootcmd"))
-			setenv("bootcmd", "run mmc_sel; run a62_boot_init; boota mmc0");
+			setenv("bootcmd", "run a62_boot_init; boota mmc0");
 	    break;
 	case SD3_BOOT:
 	case MMC3_BOOT:
+	    if (!getenv("mmc_cur"))
+			setenv("mmc_cur", "1");
+	    if (!getenv("root_device"))
+			setenv("root_device", "sd");
 	    if (!getenv("fastboot_dev"))
 			setenv("fastboot_dev", "mmc1");
 	    if (!getenv("bootcmd"))
-			setenv("bootcmd", "run mmc_sel; run a62_boot_init; boota mmc1");
+			setenv("bootcmd", "run a62_boot_init; boota mmc1");
 	    break;
-	case MMC4_BOOT:
-	    if (!getenv("fastboot_dev"))
-			setenv("fastboot_dev", "mmc2");
-	    if (!getenv("bootcmd"))
-			setenv("bootcmd", "run mmc_sel; run a62_boot_init; boota mmc2");
-	    break;
+//	case MMC4_BOOT:
+//	    if (!getenv("fastboot_dev"))
+//			setenv("fastboot_dev", "mmc2");
+//	    if (!getenv("bootcmd"))
+//			setenv("bootcmd", "run a62_boot_init; boota mmc2");
+//	    break;
 #endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
 	default:
 		printf("unsupported boot devices\n");
@@ -179,6 +190,7 @@ void board_recovery_setup(void)
 	case SD2_BOOT:
 	case MMC1_BOOT:
 	case MMC2_BOOT:
+	case MMC4_BOOT:
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
 				"boota mmc0 recovery");
@@ -189,11 +201,11 @@ void board_recovery_setup(void)
 			setenv("bootcmd_android_recovery",
 				"boota mmc1 recovery");
 		break;
-	case MMC4_BOOT:
-		if (!getenv("bootcmd_android_recovery"))
-			setenv("bootcmd_android_recovery",
-				"boota mmc2 recovery");
-		break;
+//	case MMC4_BOOT:
+//		if (!getenv("bootcmd_android_recovery"))
+//			setenv("bootcmd_android_recovery",
+//				"boota mmc2 recovery");
+//		break;
 #endif /*CONFIG_FASTBOOT_STORAGE_MMC*/
 	default:
 		printf("Unsupported bootup device for recovery: dev: %d\n",
@@ -353,18 +365,26 @@ int board_mmc_init(bd_t *bis){
 	return 0;
 #else
 	struct src *psrc = (struct src *)SRC_BASE_ADDR;
+	unsigned reg_smbr1 = readl(&psrc->sbmr1);
 	unsigned reg = readl(&psrc->sbmr1) >> 11;	
+
 	printf("mmc port %d\n", reg & 0x3);
 
-	/* We use SD to boot from*/
-	SETUP_IOMUX_PADS(usdhc3_pads);
-	usdhc_cfg[1].esdhc_base = USDHC3_BASE_ADDR;
-	usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
-	gpio_direction_input(USDHC3_CD_GPIO);
-	gpio_direction_output(USDHC3_PWR_GPIO, 1);
-	gd->arch.sdhc_clk = usdhc_cfg[1].sdhc_clk;
-
-	return fsl_esdhc_initialize(bis, &usdhc_cfg[1]);
+	if ((reg_smbr1 & 0x0820) == 0x0820) {
+	   /* Setup eMMC */
+	   SETUP_IOMUX_PADS(usdhc4_pads);
+	   usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC4_CLK);
+	   return fsl_esdhc_initialize(bis, &usdhc_cfg[0]);
+	} else {
+	   /* Setup uSD */
+	   SETUP_IOMUX_PADS(usdhc3_pads);
+	   usdhc_cfg[1].esdhc_base = USDHC3_BASE_ADDR;
+	   usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+	   gpio_direction_input(USDHC3_CD_GPIO);
+	   gpio_direction_output(USDHC3_PWR_GPIO, 1);
+	   gd->arch.sdhc_clk = usdhc_cfg[1].sdhc_clk;
+	   return fsl_esdhc_initialize(bis, &usdhc_cfg[1]);
+	}
 #endif
 }
 #endif  /*  CONFIG_FSL_ESDHC  */

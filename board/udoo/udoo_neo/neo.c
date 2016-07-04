@@ -1005,6 +1005,8 @@ int checkboard(void)
 
 void board_fastboot_setup(void)
 {
+	if (!getenv("mmc_cur"))
+		setenv("mmc_cur", "0");
 	if (!getenv("fastboot_dev"))
 		setenv("fastboot_dev", "mmc0");
 	if (!getenv("bootcmd"))
