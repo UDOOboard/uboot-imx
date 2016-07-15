@@ -373,11 +373,8 @@ int check_recovery_cmd_file(void)
 
 void board_recovery_setup(void)
 {
-	if (!getenv("bootcmd_android_recovery"))
-		setenv("bootcmd_android_recovery", "boota mmc0 recovery");
-	
 	printf("setup env for recovery..\n");
-	setenv("bootcmd", "run udoo_boot_init; run bootcmd_android_recovery");
+	setenv("bootcmd", "run recoverycmd");
 }
 #endif /*CONFIG_ANDROID_RECOVERY*/
 
