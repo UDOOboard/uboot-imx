@@ -395,7 +395,8 @@
 		"ext2load mmc 0:5 ${fdt_loadaddr} ${fdt_file}; \0" \
 	"splashpos=m,m\0" \
 	"fdt_high=0xffffffff\0" \
-	"initrd_high=0xffffffff\0"
+	"initrd_high=0xffffffff\0" \
+	"recoverycmd=run udoo_boot_init; boota mmc0 recovery\0"
 #endif
 
 #define CONFIG_CMD_TIME
