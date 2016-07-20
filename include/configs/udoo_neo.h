@@ -122,7 +122,6 @@
 
 #define CONFIG_SYS_AUXCORE_BOOTDATA 0x78000000 /* Set to QSPI2 B flash at default */
 #ifndef CONFIG_SYS_AUXCORE_FASTUP
-#define CONFIG_CMD_BOOTAUX /* Boot M4 by command, disable this when M4 fast up */
 #define CONFIG_CMD_SETEXPR
 #endif
 
@@ -138,7 +137,7 @@
 #else
 #define M4_STARTUP_ENV \
 	"m4boot=\0" \
-	"m4mmcargs=\0"
+	"m4mmcargs=uart_from_osc clk_ignore_unused cpuidle.off=1\0"
 #endif
 
 #ifdef CONFIG_VIDEO
