@@ -191,12 +191,24 @@ void board_recovery_setup(void)
 	case MMC1_BOOT:
 	case MMC2_BOOT:
 	case MMC4_BOOT:
+	    	if (!getenv("mmc_cur"))
+			setenv("mmc_cur", "0");
+	    	if (!getenv("root_device"))
+			setenv("root_device", "emmc");
+	    	if (!getenv("fastboot_dev"))
+			setenv("fastboot_dev", "mmc0");
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
 				"boota mmc0 recovery");
 		break;
 	case SD3_BOOT:
 	case MMC3_BOOT:
+	    	if (!getenv("mmc_cur"))
+			setenv("mmc_cur", "1");
+	    	if (!getenv("root_device"))
+			setenv("root_device", "sd");
+	    	if (!getenv("fastboot_dev"))
+			setenv("fastboot_dev", "mmc1");
 		if (!getenv("bootcmd_android_recovery"))
 			setenv("bootcmd_android_recovery",
 				"boota mmc1 recovery");
@@ -577,7 +589,7 @@ int do_a62init(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		modelfdt = "imx6dl-a62";
 	}
 	
-	char* video_part = "-hdmi";
+	char* video_part = "-lvds7";
 	char* video = getenv("video_output");
 	
 	if (video) {
@@ -589,6 +601,8 @@ int do_a62init(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 #endif
 		} else if (strcmp(video, "lvds15") == 0) {
 			video_part = "-lvds15";
+		} else if (strcmp(video, "hdmi") == 0) {
+			video_part = "-hdmi";
 		}
 	}
 	
