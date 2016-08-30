@@ -20,7 +20,7 @@ This branch is based on Freescale's U-Boot (uboot-imx) version 2015.04.
 
 The build can be started with:
 
-    ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make udoo_qdl_config
+    ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make udoo_qd_defconfig
     ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make
 
 The produced files, `SPL` and `u-boot.img`, can be used to boot both Quad and Dual boards.
