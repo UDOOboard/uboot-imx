@@ -15,12 +15,12 @@ The produced files, `SPL` and `u-boot.img`, can be used to boot all Neo variants
 
 UDOO Quad/Dual
 --------------
-To build the U-Boot for [UDOO Quad/Dual](http://www.udoo.org/udoo-dual-and-quad/), use the [2015.04.imx][udoo] branch.
-This branch is based on Freescale's U-Boot (uboot-imx) version 2015.04.
+To build the U-Boot for [UDOO Quad/Dual](http://www.udoo.org/udoo-dual-and-quad/), use the [2015.10.fslc-qdl][udoo] branch.
+This branch is based on Freescale's U-Boot (uboot-imx) version 2015.10.
 
 The build can be started with:
 
-    ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make udoo_qdl_config
+    ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make udoo_qd_config
     ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make
 
 The produced files, `SPL` and `u-boot.img`, can be used to boot both Quad and Dual boards.
