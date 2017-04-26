@@ -31,6 +31,9 @@ u32 spl_boot_device(void)
 		else
 			return BOOT_DEVICE_NOR;
 		break;
+	case 0x1:
+	/* SPI FLASH on B08 */
+		return BOOT_DEVICE_SPI;
 	/* SATA: See 8.5.4, Table 8-20 */
 	case 0x2:
 		return BOOT_DEVICE_SATA;

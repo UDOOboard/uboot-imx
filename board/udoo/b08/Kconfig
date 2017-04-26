@@ -1,0 +1,15 @@
+if TARGET_SECO_B08
+
+config SYS_BOARD
+	default "b08"
+
+config SYS_VENDOR
+	default "udoo"
+
+config SYS_SOC
+	default "mx6"
+
+config SYS_CONFIG_NAME
+	default "seco_b08"
+
+endif

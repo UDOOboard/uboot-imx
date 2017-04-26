@@ -1,0 +1,6 @@
+SECO B08 BOARD
+M:	Giuseppe Pagano <giuseppe.pagano@seco.com>
+S:	Maintained
+F:	board/udoo/b08/
+F:	include/configs/seco_b08.h
+F:	configs/seco_b08_defconfig

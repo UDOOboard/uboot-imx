@@ -479,6 +479,11 @@ config TARGET_MX51_EFIKAMX
 	bool "Support mx51_efikamx"
 	select CPU_V7
 
+config TARGET_SECO_B08
+	bool "Support Seco B08"
+	select CPU_V7
+	select SUPPORT_SPL
+
 config TARGET_VISION2
 	bool "Support vision2"
 	select CPU_V7
@@ -945,6 +950,7 @@ source "board/tqc/tqma6/Kconfig"
 source "board/trizepsiv/Kconfig"
 source "board/ttcontrol/vision2/Kconfig"
 source "board/udoo/a62/Kconfig"
+source "board/udoo/b08/Kconfig"
 source "board/udoo/udoo_qd/Kconfig"
 source "board/udoo/udoo_neo/Kconfig"
 source "board/vpac270/Kconfig"
