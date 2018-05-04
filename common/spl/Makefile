@@ -11,6 +11,7 @@
 ifdef CONFIG_SPL_BUILD
 obj-$(CONFIG_SPL_FRAMEWORK) += spl.o
 obj-$(CONFIG_SPL_NOR_SUPPORT) += spl_nor.o
+obj-$(CONFIG_SPL_SPI_SUPPORT) += spl_spi.o sf_ops.o sf_params.o
 obj-$(CONFIG_SPL_YMODEM_SUPPORT) += spl_ymodem.o
 obj-$(CONFIG_SPL_NAND_SUPPORT) += spl_nand.o
 obj-$(CONFIG_SPL_ONENAND_SUPPORT) += spl_onenand.o

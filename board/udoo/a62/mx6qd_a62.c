@@ -601,6 +601,10 @@ int do_a62init(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 #endif
 		} else if (strcmp(video, "lvds15") == 0) {
 			video_part = "-lvds15";
+		} else if (strcmp(video, "lvds10") == 0) {
+			video_part = "-lvds10";
+		} else if (strcmp(video, "lvds1080") == 0) {
+			video_part = "-lvds1080";
 		} else if (strcmp(video, "lvds7hdmi") == 0) {
 			video_part = "-lvds7hdmi";
 #ifdef CONFIG_ANDROID_SUPPORT
