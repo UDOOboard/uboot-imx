@@ -1,0 +1,7 @@
+# Android support for A62 Quad/Dual and DualLite/Solo boards with 1024 memory size
+CONFIG_SPL=y
+CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/imx-common/spl_sd.cfg,MX6QDL,DDR_SIZE=2048,ANDROID_SUPPORT"
+CONFIG_ARM=y
+CONFIG_TARGET_A62=y
+CONFIG_DM=y
+CONFIG_DM_THERMAL=y
