@@ -71,6 +71,17 @@ DECLARE_GLOBAL_DATA_PTR;
 #define EPDC_PAD_CTRL    (PAD_CTL_PKE | PAD_CTL_SPEED_MED |     \
 		PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
 
+/*  __________________________________________________________________________
+ * |                                                                          |
+ * |		                      GPIO		                      |
+ * |__________________________________________________________________________|
+ */
+
+iomux_v3_cfg_t const gpio_pads[] = {
+	IOMUX_PADS(PAD_SD2_DAT2__GPIO1_IO13 | MUX_PAD_CTRL(NO_PAD_CTRL)),
+	IOMUX_PADS(PAD_SD2_DAT0__GPIO1_IO15 | MUX_PAD_CTRL(NO_PAD_CTRL)),
+};
+
 
 /*  __________________________________________________________________________
  * |                                                                          |

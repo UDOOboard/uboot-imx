@@ -7,6 +7,7 @@
 #
 
 obj-y                            := mx6qd_a62.o 
+obj-y                            += detectboard.o
 obj-y                            += ../common/board.o
 obj-${CONFIG_FSL_ESDHC}          += ../common/usdhc.o
 obj-${CONFIG_PFUZE100_PMIC_I2C}  += ../common/pmic100.o

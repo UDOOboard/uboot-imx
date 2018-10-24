@@ -32,6 +32,9 @@
 	#define CONFIG_MX6S_SECO_A62
 #endif
 
+#define CONFIG_SYS_I2C_MXC
+#define TOUCH_I2C_BUS			2
+
 #define CONFIG_SYS_USE_I2C_BUS
 
 #define CONFIG_OF_LOAD_MANUALLY
@@ -81,7 +84,7 @@
 */
 #ifdef CONFIG_SYS_USE_I2C_BUS
 
-	#define CONFIG_SYS_I2C_BASE                   I2C1_BASE_ADDR
+	#define CONFIG_SYS_I2C_BASE                   I2C3_BASE_ADDR
 	#define CONFIG_SYS_I2C_SPEED                  100000
 
 #endif

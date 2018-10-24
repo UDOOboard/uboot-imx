@@ -98,7 +98,10 @@ int get_seco_board_revision (struct i2c_pads_info *i2c_pad, unsigned char *board
  */
 int checkboard (void) {
 
-	printf("Board: %s\n", board_name);
+	if (is_cpu_type(MXC_CPU_MX6Q))
+	   printf("Board: %s Quad/Dual \n", board_name);
+	else
+	   printf("Board: %s DualLite/Solo \n", board_name);
 
 	return 0;
 }

@@ -12,7 +12,9 @@
 #include "detectboard.h"
 
 
-#define MX6_GPIO_USB_RESET    IMX_GPIO_NR(7, 12)
+#define MX6_GPIO_USB_RESET	IMX_GPIO_NR(7, 12)
+#define MX6_GPIO_I2C_IRQ	IMX_GPIO_NR(1, 13)
+#define MX6_GPIO_I2C_RESET	IMX_GPIO_NR(1, 15)
 
 
 /*  I2C2 - EEPROM, HDMI  */
@@ -43,7 +45,7 @@ static struct i2c_pads_info mx6dl_i2c_pad_info1 = {
 };
 
 /*  I2C3 - H29, CN11  */
-static struct i2c_pads_info mx6q_i2c_pad_info2 = {
+static struct i2c_pads_info mx6q_i2c_pad_info3 = {
 	.scl = {
 		.i2c_mode  = MX6Q_PAD_GPIO_5__I2C3_SCL   | PC,
 		.gpio_mode = MX6Q_PAD_GPIO_5__GPIO1_IO05 | PC,
@@ -56,7 +58,7 @@ static struct i2c_pads_info mx6q_i2c_pad_info2 = {
 	},
 };
 
-static struct i2c_pads_info mx6dl_i2c_pad_info2 = {
+static struct i2c_pads_info mx6dl_i2c_pad_info3 = {
 	.scl = {
 		.i2c_mode  = MX6DL_PAD_GPIO_5__I2C3_SCL   | PC,
 		.gpio_mode = MX6DL_PAD_GPIO_5__GPIO1_IO05 | PC,
@@ -462,6 +464,21 @@ int board_ehci_power (int port, int on) {
  * |__________________________________________________________________________|
  */
 
+/*  __________________________________________________________________________
+ * |                                                                          |
+ * |                             SETUP GPIO                                   |
+ * |__________________________________________________________________________|
+ */
+
+static void setup_iomux_gpio(void)
+{
+    imx_iomux_v3_setup_multiple_pads(gpio_pads, ARRAY_SIZE(gpio_pads));
+}
+
+/*  __________________________________________________________________________
+ * |__________________________________________________________________________|
+ */
+
 
 /*  __________________________________________________________________________
  * |                                                                          |
@@ -475,8 +492,20 @@ char *board_name = CONFIG_SECO_BOARD_NAME;
 char *board_name = "Seco SBC-i.MX6 (SBC) - A62";
 #endif
 
-
 int board_init (void) {
+
+#ifdef CONFIG_SYS_I2C_MXC
+	gpio_direction_input(MX6_GPIO_I2C_IRQ);
+ 	gpio_direction_output(MX6_GPIO_I2C_RESET, 0);
+
+	if (is_cpu_type(MXC_CPU_MX6Q))
+		setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6q_i2c_pad_info3);
+	else
+		setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &mx6dl_i2c_pad_info3);
+
+	gpio_set_value (MX6_GPIO_I2C_RESET, 1);
+#endif
+
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
@@ -499,6 +528,8 @@ int overwrite_console (void) {
 
 int board_early_init_f (void) {
 	setup_iomux_uart();
+	setup_iomux_gpio();
+
 #if defined(CONFIG_VIDEO_IPUV3)
 	setup_display();
 #endif
@@ -592,9 +623,26 @@ int do_a62init(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	char* video_part = "-lvds7hdmi";
 	char* video = getenv("video_output");
 	
+	if (!video) {
+		video = "auto";
+	}
+
 	if (video) {
+
 		video = trim(video);
-		if (strcmp(video, "lvds7") == 0) {
+		if (strcmp(video, "auto") == 0) {
+			switch(detect_video()) {
+			   case 0x14:
+				video_part = "-lvds10hdmi";
+				break;
+			   case 0x55:
+				video_part = "-lvds7hdmi";
+				break;
+			   default:
+				video_part = "-lvds7hdmi";
+				break;
+			}
+		} else if (strcmp(video, "lvds7") == 0) {
 			video_part = "-lvds7";
 #ifdef CONFIG_ANDROID_SUPPORT
 			setenv("lcd_density", "128");
@@ -603,6 +651,8 @@ int do_a62init(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			video_part = "-lvds15";
 		} else if (strcmp(video, "lvds10") == 0) {
 			video_part = "-lvds10";
+		} else if (strcmp(video, "lvds10hdmi") == 0) {
+			video_part = "-lvds10hdmi";
 		} else if (strcmp(video, "lvds1080") == 0) {
 			video_part = "-lvds1080";
 		} else if (strcmp(video, "lvds7hdmi") == 0) {

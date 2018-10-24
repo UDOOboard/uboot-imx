@@ -14,3 +14,4 @@
 
 
 
+int detect_video(void);
