@@ -1057,7 +1057,7 @@ char *trim(char *str)
  * After loading uEnv.txt, we autodetect which fdt file we need to load and if we should start M4.
  * uEnv.txt can contain:
  *  - video_output=hdmi|lvds7|lvds15|disabled
- *    any other value (or if the variable is not specified) will default to "hdmi"
+ *    any other value (or if the variable is not specified) will default to "disabled"
  *  - m4_enabled=true|false
  *    any other value (or if the variable is not specified) will default to "true"
  *  - use_custom_dtb=true|false
@@ -1087,7 +1087,7 @@ int do_udooinit(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			return 0;
 	}
 	
-	char* video_part = "-hdmi";
+	char* video_part = "";
 	char* video = getenv("video_output");
 	
 	if (video) {
@@ -1099,8 +1099,8 @@ int do_udooinit(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 #endif
 		} else if (strcmp(video, "lvds15") == 0) {
 			video_part = "-lvds15";
-		} else if (strcmp(video, "disabled") == 0) {
-			video_part = "";
+		} else if (strcmp(video, "hdmi") == 0) {
+			video_part = "-hdmi";
 		}
 	}
 	
@@ -1117,7 +1117,7 @@ int do_udooinit(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 	}
 	
-	char* dir_part = "dts";
+	char* dir_part = "/boot/dtbs";
 	char* customdtb = getenv("use_custom_dtb");
 	if (customdtb) {
 		customdtb = trim(customdtb);

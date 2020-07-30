@@ -129,15 +129,16 @@
 #define M4_STARTUP_ENV \
 	"m4last=/var/opt/m4/m4last.fw\0" \
 	"m4fw=/m4startup.fw\0" \
-	"mmcrootpart=2\0" \
+	"mmcrootpart=1\0" \
 	"m4last_cmd=ext2load mmc ${mmcdev}:${mmcrootpart} 0x84000000 ${m4last};\0" \
-	"m4fw_cmd=fatload mmc ${mmcdev}:${mmcpart} 0x84000000 ${m4fw}; bootaux 0x84000000\0" \
+	"m4fw_cmd=ext2load mmc ${mmcdev}:${mmcpart} 0x84000000 ${m4fw}; bootaux 0x84000000\0" \
 	"m4boot=if run m4last_cmd ; then bootaux 0x84000000 ; else run m4fw_cmd ; fi\0" \
 	"m4mmcargs=uart_from_osc clk_ignore_unused cpuidle.off=1\0"
 #else
 #define M4_STARTUP_ENV \
 	"m4boot=\0" \
-	"m4mmcargs=uart_from_osc clk_ignore_unused cpuidle.off=1\0"
+	"m4mmcargs=uart_from_osc clk_ignore_unused cpuidle.off=1\0" \
+	"m4_enabled=false\0"
 #endif
 
 #ifdef CONFIG_VIDEO
@@ -164,8 +165,8 @@
 	CONFIG_MFG_ENV_SETTINGS \
 	M4_STARTUP_ENV \
 	CONFIG_VIDEO_MODE \
-	"script=uEnv.txt\0" \
-	"image=/zImage\0" \
+	"script=/boot/uEnv.txt\0" \
+	"image=/boot/zImage\0" \
 	"console=ttymxc0\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -181,11 +182,11 @@
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
 		"root=${mmcroot} rootfstype=${mmcrootfstype} ${m4mmcargs} consoleblank=0\0" \
 	"loadbootscript=" \
-		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
+		"ext2load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"env import -t ${loadaddr} ${filesize};\0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"loadimage=ext2load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+	"loadfdt=ext2load mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
@@ -310,7 +311,7 @@
 
 #define CONFIG_SYS_MMC_ENV_DEV		0  /*USDHC2*/
 #define CONFIG_SYS_MMC_ENV_PART		0	/* user area */
-#define CONFIG_MMCROOT			"/dev/mmcblk0p2"  /* USDHC2 */
+#define CONFIG_MMCROOT			"/dev/mmcblk0p1"  /* USDHC2 */
 
 #if defined(CONFIG_ENV_IS_IN_MMC)
 #define CONFIG_ENV_OFFSET		(8 * SZ_64K)
